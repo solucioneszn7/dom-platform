@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ===== Tema DOM Platform — Notion/Trello Inspired ===== */
+@theme {
+  --color-dom-50: #eef4ff;
+  --color-dom-100: #d9e6ff;
+  --color-dom-200: #bcd4ff;
+  --color-dom-300: #8ebaff;
+  --color-dom-400: #5996ff;
+  --color-dom-500: #3371ff;
+  --color-dom-600: #1b51f5;
+  --color-dom-700: #143de1;
+  --color-dom-800: #1733b6;
+  --color-dom-900: #19308f;
+
+  --color-sidebar: #191919;
+  --color-sidebar-hover: #2c2c2c;
+  --color-sidebar-active: #363636;
+  --color-sidebar-text: #9b9b9b;
+  --color-sidebar-text-active: #ebebeb;
+
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f7f7f5;
+  --color-surface-hover: #efefef;
+
+  --color-exito: #0f766e;
+  --color-advertencia: #ca8a04;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
+
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ===== Reset & Base ===== */
+* { box-sizing: border-box; }
+
+body {
+  @apply font-sans bg-surface-secondary text-gray-900 antialiased;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== Scrollbar — Notion style ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 100px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+  background-clip: content-box;
+}
+
+/* ===== Sidebar scrollbar ===== */
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 100px;
+}
+
+/* ===== Notion-style page transitions ===== */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-page-enter {
+  animation: fadeSlideIn 0.25s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ===== Kanban card drag styles ===== */
+.kanban-card {
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.kanban-card:active {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* ===== Notion-style selection ===== */
+::selection {
+  background: rgba(51, 113, 255, 0.15);
+}
+
+/* ===== Focus ring ===== */
+*:focus-visible {
+  outline: 2px solid var(--color-dom-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ===== Dark Mode ===== */
+.dark body,
+.dark #root {
+  background-color: #191919;
+  color: #e8e8e8;
+}
+
+.dark .bg-white, .dark .bg-surface { background-color: #202020 !important; }
+.dark .bg-surface-secondary { background-color: #191919 !important; }
+.dark .bg-gray-50 { background-color: #191919 !important; }
+.dark .bg-gray-100 { background-color: #252525 !important; }
+.dark .border-gray-200 { border-color: #333 !important; }
+.dark .border-gray-100 { border-color: #2a2a2a !important; }
+.dark .border-gray-300 { border-color: #404040 !important; }
+.dark .text-gray-900 { color: #e8e8e8 !important; }
+.dark .text-gray-800 { color: #d4d4d4 !important; }
+.dark .text-gray-700 { color: #b4b4b4 !important; }
+.dark .text-gray-600 { color: #9b9b9b !important; }
+.dark .text-gray-500 { color: #808080 !important; }
+.dark .text-gray-400 { color: #6b6b6b !important; }
+.dark .hover\:bg-gray-50:hover { background-color: #2a2a2a !important; }
+.dark .hover\:bg-gray-100:hover { background-color: #303030 !important; }
+
+.dark input, .dark textarea, .dark select {
+  background-color: #252525;
+  border-color: #404040;
+  color: #e8e8e8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #404040;
+}
