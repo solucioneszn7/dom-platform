@@ -13,6 +13,7 @@ import PaginaCalendario from './paginas/calendario/PaginaCalendario'
 import PaginaPlanificacion from './paginas/planificacion/PaginaPlanificacion'
 import PaginaMediciones from './paginas/mediciones/PaginaMediciones'
 import PaginaCertificaciones from './paginas/certificaciones/PaginaCertificaciones'
+import PaginaViabilidad from './paginas/viabilidad/PaginaViabilidad'
 import PaginaConfiguracion from './paginas/configuracion/PaginaConfiguracion'
 import PaginaConsultaCliente from './paginas/cliente/PaginaConsultaCliente'
 
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/planificacion" element={<PaginaPlanificacion />} />
         <Route path="/mediciones" element={<PaginaMediciones />} />
         <Route path="/certificaciones" element={<PaginaCertificaciones />} />
+        <Route path="/viabilidad" element={<PaginaViabilidad />} />
         <Route path="/configuracion" element={<PaginaConfiguracion />} />
       </Route>
 

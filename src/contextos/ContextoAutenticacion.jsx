@@ -143,8 +143,14 @@ export function ProveedorAutenticacion({ children }) {
     iniciarConGoogle,
     cerrarSesion,
     esAdmin: datosUsuario?.rol === ROLES.ADMIN,
-    esGestor: datosUsuario?.rol === ROLES.GESTOR,
+    esGestor: datosUsuario?.rol === ROLES.GESTOR || datosUsuario?.rol === ROLES.TECNICO_ESTUDIO,
     esCliente: datosUsuario?.rol === ROLES.CLIENTE,
+    esDirector: datosUsuario?.rol === ROLES.DIRECTOR_GENERAL,
+    esJefeDepto: datosUsuario?.rol === ROLES.JEFE_DEPTO,
+    esJefeObra: datosUsuario?.rol === ROLES.JEFE_OBRA,
+    puedeVerMargenes: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor'].includes(datosUsuario?.rol),
+    puedeAprobar: ['director_general', 'jefe_depto'].includes(datosUsuario?.rol),
+    puedeExportarTodo: ['director_general', 'jefe_depto'].includes(datosUsuario?.rol),
   }
 
   return (

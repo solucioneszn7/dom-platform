@@ -153,9 +153,26 @@ export const CARPETAS_DRIVE = [
 
 // ===== Roles de usuario =====
 export const ROLES = {
-  ADMIN: 'admin',
-  GESTOR: 'gestor',
-  CLIENTE: 'cliente',
+  ADMIN: 'admin',               // Soporte técnico — todo el sistema
+  DIRECTOR_GENERAL: 'director_general', // Visión ejecutiva — todos los proyectos, aprueba/rechaza
+  JEFE_DEPTO: 'jefe_depto',     // Gestión áreas — sus proyectos, aprueba cierres
+  TECNICO_ESTUDIO: 'tecnico_estudio', // Operativo — carga BC3, ajusta indirectos
+  JEFE_OBRA: 'jefe_obra',       // Destino — ve presupuesto adjudicado (sin márgenes)
+  ENCARGADO: 'encargado',       // Obra — mediciones diarias
+  GESTOR: 'gestor',             // Legacy — equivale a tecnico_estudio
+  CLIENTE: 'cliente',           // Consulta externa
+}
+
+// Permisos por rol
+export const PERMISOS = {
+  [ROLES.ADMIN]:            { verTodo: true, editarUsuarios: true, verMargenes: true, exportarTodo: false, aprobar: false },
+  [ROLES.DIRECTOR_GENERAL]: { verTodo: true, editarUsuarios: false, verMargenes: true, exportarTodo: true, aprobar: true },
+  [ROLES.JEFE_DEPTO]:       { verTodo: false, editarUsuarios: false, verMargenes: true, exportarTodo: true, aprobar: true },
+  [ROLES.TECNICO_ESTUDIO]:  { verTodo: false, editarUsuarios: false, verMargenes: true, exportarTodo: false, aprobar: false },
+  [ROLES.JEFE_OBRA]:        { verTodo: false, editarUsuarios: false, verMargenes: false, exportarTodo: false, aprobar: false },
+  [ROLES.ENCARGADO]:        { verTodo: false, editarUsuarios: false, verMargenes: false, exportarTodo: false, aprobar: false },
+  [ROLES.GESTOR]:           { verTodo: false, editarUsuarios: false, verMargenes: true, exportarTodo: false, aprobar: false },
+  [ROLES.CLIENTE]:          { verTodo: false, editarUsuarios: false, verMargenes: false, exportarTodo: false, aprobar: false },
 }
 
 // ===== Estados de proyecto =====

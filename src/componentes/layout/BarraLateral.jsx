@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, FolderKanban, Settings, LogOut, X,
   ChevronLeft, ChevronRight, Search, Star, ChevronsUpDown,
-  Users, CalendarDays, FileCheck2, Ruler,
+  Users, CalendarDays, FileCheck2, Ruler, Shield,
 } from 'lucide-react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
 
@@ -35,20 +35,21 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
   const [obraAbierto, setObraAbierto] = useState(true)
 
   const enlacesPrincipales = [
-    { ruta: '/dashboard', nombre: 'Dashboard', icono: LayoutDashboard, roles: ['admin', 'gestor', 'jefe_obra'] },
-    { ruta: '/proyectos', nombre: 'Proyectos', icono: FolderKanban, roles: ['admin', 'gestor', 'jefe_obra'] },
-    { ruta: '/calendario', nombre: 'Calendario', icono: CalendarDays, roles: ['admin', 'gestor', 'jefe_obra'] },
+    { ruta: '/dashboard', nombre: 'Dashboard', icono: LayoutDashboard, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
+    { ruta: '/proyectos', nombre: 'Proyectos', icono: FolderKanban, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
+    { ruta: '/calendario', nombre: 'Calendario', icono: CalendarDays, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
   ]
 
   const enlacesObra = [
-    { ruta: '/planificacion', nombre: 'Planificación BC3', icono: IconoGantt, roles: ['admin', 'gestor', 'jefe_obra'] },
-    { ruta: '/mediciones', nombre: 'Mediciones', icono: Ruler, roles: ['admin', 'gestor', 'jefe_obra', 'encargado'] },
-    { ruta: '/certificaciones', nombre: 'Certificaciones', icono: FileCheck2, roles: ['admin', 'gestor', 'jefe_obra', 'direccion'] },
+    { ruta: '/planificacion', nombre: 'Planificación BC3', icono: IconoGantt, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
+    { ruta: '/mediciones', nombre: 'Mediciones', icono: Ruler, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra', 'encargado'] },
+    { ruta: '/certificaciones', nombre: 'Certificaciones', icono: FileCheck2, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
+    { ruta: '/viabilidad', nombre: 'Viabilidad', icono: Shield, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor'] },
   ]
 
   const enlacesConfig = [
-    { ruta: '/usuarios', nombre: 'Usuarios', icono: Users, roles: ['admin'] },
-    { ruta: '/configuracion', nombre: 'Configuración', icono: Settings, roles: ['admin', 'gestor'] },
+    { ruta: '/usuarios', nombre: 'Usuarios', icono: Users, roles: ['admin', 'director_general'] },
+    { ruta: '/configuracion', nombre: 'Configuración', icono: Settings, roles: ['admin', 'director_general', 'jefe_depto', 'gestor'] },
   ]
 
   const filtrar = (links) => links.filter(e => e.roles.includes(datosUsuario?.rol))
