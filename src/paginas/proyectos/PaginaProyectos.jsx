@@ -1,199 +1,283 @@
-// ===== Página Proyectos — Notion database view =====
-import { useState, useEffect, useMemo } from 'react'
+// ===== Página de Proyectos — A-LARIFE =====
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, FolderKanban, ArrowRight, LayoutList, Columns3 } from 'lucide-react'
+import {
+  Plus, Search, Trash2, Pencil, ChevronRight,
+  FolderKanban, ArrowRight, MoreHorizontal, X, AlertCircle,
+} from 'lucide-react'
+import { gsap } from 'gsap'
+import { useRef } from 'react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
-import { escucharProyectos } from '../../servicios/proyectos'
-import { obtenerPorcentajeEjecucion, obtenerMontoAcordado, formatearMontoCorto } from '../../servicios/financiero'
-import { formatearFecha } from '../../utils/generadores'
-import Tarjeta, { TarjetaCuerpo } from '../../componentes/ui/Tarjeta'
+import { escucharProyectos, eliminarProyecto } from '../../servicios/proyectos'
+import { ETIQUETAS_FASE, COLORES_FASE, DOT_FASE, etiquetaBotonFase, avanzarFaseProyecto } from '../../utils/estadosProyecto'
+import Tarjeta from '../../componentes/ui/Tarjeta'
 import Boton from '../../componentes/ui/Boton'
 import Cargando from '../../componentes/ui/Cargando'
+import toast from 'react-hot-toast'
+import { useEntradaPagina } from '../../hooks/useAnimacion'
+
+const MONEDA_SYM = { CLP: '$', EUR: '€', USD: '$', CAD: 'C$' }
 
 export default function PaginaProyectos() {
   const { usuario, esAdmin } = useAuth()
-  const [proyectos, setProyectos] = useState([])
-  const [busqueda, setBusqueda] = useState('')
-  const [cargando, setCargando] = useState(true)
-  const [vista, setVista] = useState('tabla')
   const navegar = useNavigate()
+  const paginaRef = useEntradaPagina()
+
+  const [proyectos, setProyectos] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [busqueda, setBusqueda] = useState('')
+  const [filtroFase, setFiltroFase] = useState('todos')
+  const [confirmarEliminar, setConfirmarEliminar] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [avanzando, setAvanzando] = useState(null)
 
   useEffect(() => {
     if (!usuario) return
-    const cancelar = escucharProyectos(usuario.uid, esAdmin, (datos) => {
-      setProyectos(datos); setCargando(false)
+    return escucharProyectos(usuario.uid, esAdmin, datos => {
+      setProyectos(datos)
+      setCargando(false)
     })
-    return cancelar
   }, [usuario, esAdmin])
 
-  const proyectosFiltrados = proyectos.filter(p =>
-    `${p.numeroCaso} ${p.nombre} ${p.direccion} ${p.comuna} ${p.propietario?.nombre}`
-      .toLowerCase().includes(busqueda.toLowerCase())
-  )
+  const filtrados = proyectos.filter(p => {
+    const coincideBusqueda =
+      p.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      p.numeroCaso?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      p.propietario?.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+    const coincideFase = filtroFase === 'todos' || p.fase === filtroFase
+    return coincideBusqueda && coincideFase
+  })
 
-  const columnas = useMemo(() => ({
-    activo: proyectosFiltrados.filter(p => p.estado === 'activo'),
-    completado: proyectosFiltrados.filter(p => p.estado === 'completado'),
-    archivado: proyectosFiltrados.filter(p => p.estado === 'archivado'),
-  }), [proyectosFiltrados])
+  async function handleEliminar() {
+    if (!confirmarEliminar) return
+    setEliminando(true)
+    try {
+      await eliminarProyecto(confirmarEliminar.id)
+      toast.success('Proyecto eliminado permanentemente')
+      setConfirmarEliminar(null)
+    } catch {
+      toast.error('Error al eliminar el proyecto')
+    } finally {
+      setEliminando(false)
+    }
+  }
+
+  async function handleAvanzarFase(proyecto) {
+    setAvanzando(proyecto.id)
+    try {
+      const nueva = await avanzarFaseProyecto(proyecto.id, proyecto.fase || 'revision', usuario.uid)
+      toast.success(`Proyecto → ${ETIQUETAS_FASE[nueva]}`)
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setAvanzando(null)
+    }
+  }
 
   if (cargando) return <Cargando texto="Cargando proyectos..." />
 
   return (
-    <div className="space-y-6">
-      {/* Page header — Notion style */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div ref={paginaRef} className="space-y-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Proyectos</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            {proyectos.length} proyecto{proyectos.length !== 1 ? 's' : ''} registrado{proyectos.length !== 1 ? 's' : ''}
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Proyectos de estudio</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{proyectos.length} proyectos en total</p>
         </div>
-        <Boton icono={Plus} tamano="sm" onClick={() => navegar('/proyectos/nuevo')}>
-          Nuevo Proyecto
-        </Boton>
+        <Link to="/proyectos/nuevo">
+          <Boton icono={Plus}>Nuevo proyecto</Boton>
+        </Link>
       </div>
 
-      {/* Toolbar — search + view toggle */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-          <input type="text" placeholder="Buscar..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-            className="w-full rounded-md border border-gray-200 pl-9 pr-3 py-1.5 text-sm placeholder-gray-400 hover:border-gray-300 focus:border-dom-500 focus:outline-none focus:ring-1 focus:ring-dom-500/30 transition-colors" />
+      {/* Filtros */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre, caso o propietario..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-dom-500 focus:outline-none focus:ring-1 focus:ring-dom-500/30"
+          />
         </div>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-md p-0.5">
-          <button onClick={() => setVista('tabla')} className={`p-1.5 rounded transition-colors ${vista === 'tabla' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`} title="Vista tabla">
-            <LayoutList className="h-3.5 w-3.5" />
-          </button>
-          <button onClick={() => setVista('kanban')} className={`p-1.5 rounded transition-colors ${vista === 'kanban' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`} title="Vista board">
-            <Columns3 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      {proyectosFiltrados.length === 0 ? (
-        <Tarjeta>
-          <TarjetaCuerpo>
-            <div className="py-14 text-center">
-              <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                <FolderKanban className="h-6 w-6 text-gray-300" />
-              </div>
-              <p className="text-sm text-gray-500 mb-3">{busqueda ? 'Sin resultados' : 'No hay proyectos aún'}</p>
-              {!busqueda && <Boton tamano="sm" icono={Plus} onClick={() => navegar('/proyectos/nuevo')}>Crear primer proyecto</Boton>}
-            </div>
-          </TarjetaCuerpo>
-        </Tarjeta>
-      ) : vista === 'tabla' ? (
-        /* ===== Table View — Notion database ===== */
-        <Tarjeta>
-          {/* Header row */}
-          <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-2.5 text-[11px] font-medium text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-gray-50/50">
-            <span className="col-span-4">Proyecto</span>
-            <span className="col-span-2">Estado</span>
-            <span className="col-span-2">Propietario</span>
-            <span className="col-span-2 text-right">Monto</span>
-            <span className="col-span-1">Fecha</span>
-            <span className="col-span-1" />
-          </div>
-          <div className="divide-y divide-gray-50">
-            {proyectosFiltrados.map(proyecto => {
-              const monto = obtenerMontoAcordado(proyecto)
-              const pct = obtenerPorcentajeEjecucion(proyecto)
-              return (
-                <Link key={proyecto.id} to={`/proyectos/${proyecto.id}`}>
-                  <div className="group grid grid-cols-1 sm:grid-cols-12 gap-2 items-center px-5 py-3 hover:bg-blue-50/30 transition-colors cursor-pointer">
-                    <div className="sm:col-span-4 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-mono text-dom-600 bg-dom-50 px-1.5 py-0.5 rounded">{proyecto.numeroCaso}</span>
-                      </div>
-                      <h3 className="text-[13px] font-semibold text-gray-900 truncate">{proyecto.nombre}</h3>
-                      <p className="text-[11px] text-gray-400 truncate">{proyecto.direccion}, {proyecto.comuna}</p>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium ${
-                        proyecto.estado === 'activo' ? 'bg-emerald-50 text-emerald-700' :
-                        proyecto.estado === 'completado' ? 'bg-blue-50 text-blue-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${
-                          proyecto.estado === 'activo' ? 'bg-emerald-500' :
-                          proyecto.estado === 'completado' ? 'bg-blue-500' : 'bg-gray-400'
-                        }`} />
-                        {proyecto.estado}
-                      </span>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <span className="text-[13px] text-gray-600">{proyecto.propietario?.nombre || '—'}</span>
-                    </div>
-                    <div className="sm:col-span-2 text-right">
-                      {monto > 0 ? (
-                        <div>
-                          <span className="text-[13px] font-semibold text-gray-700">{formatearMontoCorto(monto)}</span>
-                          {pct > 0 && <div className="mt-1 flex items-center gap-1.5 justify-end">
-                            <div className="w-12 bg-gray-100 rounded-full h-1 overflow-hidden">
-                              <div className={`h-full rounded-full ${pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
-                            </div>
-                            <span className="text-[10px] text-gray-400">{pct}%</span>
-                          </div>}
-                        </div>
-                      ) : <span className="text-[11px] text-gray-300">—</span>}
-                    </div>
-                    <div className="sm:col-span-1">
-                      <span className="text-[11px] text-gray-400">{formatearFecha(proyecto.fechaCreacion)}</span>
-                    </div>
-                    <div className="sm:col-span-1 flex justify-end">
-                      <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-dom-500 group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </Tarjeta>
-      ) : (
-        /* ===== Kanban View — Trello board ===== */
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {[
-            { key: 'activo', label: 'Activos', dot: 'bg-emerald-400' },
-            { key: 'completado', label: 'Completados', dot: 'bg-blue-400' },
-            { key: 'archivado', label: 'Archivados', dot: 'bg-gray-400' },
-          ].map(({ key, label, dot }) => (
-            <div key={key} className="flex-shrink-0 w-[300px] sm:flex-1 sm:min-w-[260px]">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <span className={`h-2 w-2 rounded-full ${dot}`} />
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{label}</span>
-                <span className="text-[11px] text-gray-400 bg-gray-100 rounded px-1.5 py-0.5">{columnas[key]?.length || 0}</span>
-              </div>
-              <div className="space-y-2">
-                {(columnas[key] || []).map(p => (
-                  <Link key={p.id} to={`/proyectos/${p.id}`}>
-                    <div className="kanban-card bg-white rounded-lg border border-gray-200/80 p-3 cursor-pointer">
-                      <span className="text-[10px] font-mono text-dom-600 bg-dom-50 px-1.5 py-0.5 rounded">{p.numeroCaso}</span>
-                      <h4 className="text-[13px] font-medium text-gray-900 mt-2 mb-1">{p.nombre}</h4>
-                      <p className="text-[11px] text-gray-400 truncate">{p.direccion}, {p.comuna}</p>
-                      {p.propietario?.nombre && (
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <div className="h-5 w-5 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-gray-500">{p.propietario.nombre.charAt(0)}</span>
-                          </div>
-                          <span className="text-[10px] text-gray-400">{p.propietario.nombre}</span>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-                {key === 'activo' && (
-                  <button onClick={() => navegar('/proyectos/nuevo')}
-                    className="w-full py-2 rounded-lg border border-dashed border-gray-200 text-[13px] text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors flex items-center justify-center gap-1.5">
-                    <Plus className="h-3.5 w-3.5" /> Nuevo proyecto
-                  </button>
-                )}
-              </div>
-            </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {['todos', 'revision', 'observaciones', 'preparacion', 'presentado', 'adjudicado'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFiltroFase(f)}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors ${
+                filtroFase === f
+                  ? 'bg-dom-600 text-white border-dom-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              {f === 'todos' ? 'Todos' : ETIQUETAS_FASE[f]}
+            </button>
           ))}
+        </div>
+      </div>
+
+      {/* Tabla */}
+      {filtrados.length === 0 ? (
+        <div className="py-20 text-center">
+          <FolderKanban className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">No hay proyectos{busqueda ? ' con esa búsqueda' : ''}</p>
+          {!busqueda && (
+            <Link to="/proyectos/nuevo" className="mt-3 inline-block text-sm text-dom-600 font-medium hover:underline">
+              Crear primer proyecto →
+            </Link>
+          )}
+        </div>
+      ) : (
+        <Tarjeta>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Caso</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Proyecto</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">Cliente</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Fase</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">Presupuesto</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtrados.map(p => (
+                  <FilaProyecto
+                    key={p.id}
+                    proyecto={p}
+                    onEliminar={() => setConfirmarEliminar(p)}
+                    onAvanzar={() => handleAvanzarFase(p)}
+                    avanzando={avanzando === p.id}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Tarjeta>
+      )}
+
+      {/* Modal confirmar eliminación */}
+      {confirmarEliminar && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-scale-in">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-[15px] font-semibold text-gray-900 mb-1">Eliminar proyecto permanentemente</h3>
+                <p className="text-sm text-gray-500 mb-1">
+                  Vas a eliminar <span className="font-medium text-gray-800">"{confirmarEliminar.nombre}"</span>.
+                </p>
+                <p className="text-[12px] text-red-600 bg-red-50 rounded-lg px-3 py-2 mt-3">
+                  ⚠ Esta acción no se puede deshacer. Se eliminarán todos los datos del proyecto.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5 justify-end">
+              <button
+                onClick={() => setConfirmarEliminar(null)}
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEliminar}
+                disabled={eliminando}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors"
+              >
+                {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
+  )
+}
+
+function FilaProyecto({ proyecto: p, onEliminar, onAvanzar, avanzando }) {
+  const rowRef = useRef(null)
+  const fase = p.fase || 'revision'
+  const boton = etiquetaBotonFase(fase)
+  const sym = MONEDA_SYM[p.moneda] || '$'
+  const total = p.presupuestoResumen?.presupuestoTotal || 0
+
+  return (
+    <tr
+      ref={rowRef}
+      onMouseEnter={() => gsap.to(rowRef.current, { backgroundColor: '#fafafa', duration: 0.15 })}
+      onMouseLeave={() => gsap.to(rowRef.current, { backgroundColor: 'transparent', duration: 0.15 })}
+      className="group"
+    >
+      <td className="px-4 py-3">
+        <span className="text-[11px] font-mono text-dom-600 bg-dom-50 px-2 py-0.5 rounded whitespace-nowrap">
+          {p.numeroCaso}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <Link to={`/proyectos/${p.id}`} className="font-medium text-gray-900 hover:text-dom-600 transition-colors">
+          {p.nombre}
+        </Link>
+        {p.comuna && <p className="text-[11px] text-gray-400 mt-0.5">{p.comuna}</p>}
+      </td>
+      <td className="px-4 py-3 hidden md:table-cell">
+        <p className="text-[13px] text-gray-700 truncate max-w-[160px]">{p.propietario?.nombre || '—'}</p>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border ${COLORES_FASE[fase]}`}
+          >
+            <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: DOT_FASE[fase] }} />
+            {ETIQUETAS_FASE[fase]}
+          </span>
+        </div>
+        {boton && (
+          <button
+            onClick={onAvanzar}
+            disabled={avanzando}
+            className="mt-1.5 text-[10px] text-dom-600 hover:text-dom-700 font-medium flex items-center gap-1 disabled:opacity-50"
+          >
+            {avanzando ? 'Avanzando...' : boton}
+            {!avanzando && <ArrowRight className="h-2.5 w-2.5" />}
+          </button>
+        )}
+      </td>
+      <td className="px-4 py-3 hidden lg:table-cell">
+        {total > 0
+          ? <span className="text-[13px] font-semibold text-gray-800">{sym}{(total / 1e6).toFixed(1)}M</span>
+          : <span className="text-[11px] text-gray-300">Sin BC3</span>
+        }
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-1">
+          <Link
+            to={`/proyectos/${p.id}`}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-dom-600 hover:bg-dom-50 transition-colors"
+            title="Ver detalle"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+          <Link
+            to={`/proyectos/${p.id}/editar`}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            title="Editar"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Link>
+          <button
+            onClick={onEliminar}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Eliminar permanentemente"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </td>
+    </tr>
   )
 }

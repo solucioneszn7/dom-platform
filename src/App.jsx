@@ -16,6 +16,7 @@ import PaginaCertificaciones from './paginas/certificaciones/PaginaCertificacion
 import PaginaViabilidad from './paginas/viabilidad/PaginaViabilidad'
 import PaginaConfiguracion from './paginas/configuracion/PaginaConfiguracion'
 import PaginaConsultaCliente from './paginas/cliente/PaginaConsultaCliente'
+import PaginaAdmin from './paginas/admin/PaginaAdmin'
 
 export default function App() {
   return (
@@ -26,7 +27,7 @@ export default function App() {
 
       <Route
         element={
-          <RutaProtegida rolesPermitidos={['admin', 'gestor', 'jefe_obra', 'encargado', 'direccion']}>
+          <RutaProtegida rolesPermitidos={['admin', 'gestor', 'revisor', 'jefe_obra', 'encargado', 'direccion']}>
             <LayoutPrincipal />
           </RutaProtegida>
         }
@@ -42,6 +43,8 @@ export default function App() {
         <Route path="/certificaciones" element={<PaginaCertificaciones />} />
         <Route path="/viabilidad" element={<PaginaViabilidad />} />
         <Route path="/configuracion" element={<PaginaConfiguracion />} />
+        {/* Ruta admin — solo administradores */}
+        <Route path="/admin" element={<PaginaAdmin />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/login" replace />} />

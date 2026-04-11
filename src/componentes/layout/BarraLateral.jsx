@@ -1,19 +1,21 @@
-// ===== Barra Lateral — Notion-style dark sidebar (FIXED v2) =====
+// ===== Barra Lateral — A-LARIFE Branding =====
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, FolderKanban, Settings, LogOut, X,
-  ChevronLeft, ChevronRight, Search, Star, ChevronsUpDown,
-  Users, CalendarDays, FileCheck2, Ruler, Shield,
+  ChevronLeft, ChevronRight, Search, Star, Shield,
+  Users, CalendarDays, FileCheck2, Ruler, UserCog,
 } from 'lucide-react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
 
-function DomLogo({ size = 20 }) {
+function ALarifeLogoMarca({ size = 28 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="8" fill="#3371ff" />
-      <path d="M8 10h6a6 6 0 010 12H8V10z" fill="white" opacity="0.9" />
-      <circle cx="22" cy="16" r="4" fill="white" opacity="0.7" />
+    <svg width={size} height={size} viewBox="0 0 52 52" fill="none">
+      <rect width="52" height="52" rx="10" fill="#1A2B4A" />
+      <polygon points="26,9 43,42 9,42" fill="none" stroke="#C9A84C" strokeWidth="2.8" strokeLinejoin="round" />
+      <line x1="26" y1="9" x2="26" y2="42" stroke="#C9A84C" strokeWidth="1.2" opacity="0.45" />
+      <line x1="18" y1="29" x2="34" y2="29" stroke="#C9A84C" strokeWidth="1.2" opacity="0.45" />
+      <circle cx="26" cy="9" r="2" fill="#C9A84C" />
     </svg>
   )
 }
@@ -34,41 +36,45 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
   const [workspaceAbierto, setWorkspaceAbierto] = useState(true)
   const [obraAbierto, setObraAbierto] = useState(true)
 
+  const esAdmin = datosUsuario?.rol === 'admin' || datosUsuario?.rolGlobal === 'admin'
+
   const enlacesPrincipales = [
-    { ruta: '/dashboard', nombre: 'Dashboard', icono: LayoutDashboard, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
-    { ruta: '/proyectos', nombre: 'Proyectos', icono: FolderKanban, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
-    { ruta: '/calendario', nombre: 'Calendario', icono: CalendarDays, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
+    { ruta: '/dashboard', nombre: 'Dashboard', icono: LayoutDashboard },
+    { ruta: '/proyectos', nombre: 'Proyectos', icono: FolderKanban },
+    { ruta: '/calendario', nombre: 'Calendario', icono: CalendarDays },
   ]
 
   const enlacesObra = [
-    { ruta: '/planificacion', nombre: 'Planificación BC3', icono: IconoGantt, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
-    { ruta: '/mediciones', nombre: 'Mediciones', icono: Ruler, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra', 'encargado'] },
-    { ruta: '/certificaciones', nombre: 'Certificaciones', icono: FileCheck2, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
-    { ruta: '/viabilidad', nombre: 'Viabilidad', icono: Shield, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor'] },
+    { ruta: '/planificacion', nombre: 'Planificación BC3', icono: IconoGantt },
+    { ruta: '/mediciones', nombre: 'Mediciones', icono: Ruler },
+    { ruta: '/certificaciones', nombre: 'Certificaciones', icono: FileCheck2 },
+    { ruta: '/viabilidad', nombre: 'Viabilidad', icono: Shield },
   ]
 
   const enlacesConfig = [
-    { ruta: '/usuarios', nombre: 'Usuarios', icono: Users, roles: ['admin', 'director_general'] },
-    { ruta: '/configuracion', nombre: 'Configuración', icono: Settings, roles: ['admin', 'director_general', 'jefe_depto', 'gestor'] },
+    ...(esAdmin ? [{ ruta: '/admin', nombre: 'Administración', icono: UserCog }] : []),
+    { ruta: '/configuracion', nombre: 'Configuración', icono: Settings },
   ]
 
-  const filtrar = (links) => links.filter(e => e.roles.includes(datosUsuario?.rol))
-  const todosEnlaces = [...filtrar(enlacesPrincipales), ...filtrar(enlacesObra), ...filtrar(enlacesConfig)]
+  const todosEnlaces = [...enlacesPrincipales, ...enlacesObra, ...enlacesConfig]
 
   return (
     <>
       {abierta && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onCerrar} />}
 
-      <aside className={`fixed top-0 left-0 z-50 h-full bg-sidebar flex flex-col transform transition-all duration-200 ease-out select-none lg:static lg:z-auto ${abierta ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${colapsado ? 'lg:w-[52px]' : 'lg:w-[260px]'} w-[260px]`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full bg-sidebar flex flex-col transform transition-all duration-200 ease-out select-none lg:static lg:z-auto ${abierta ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${colapsado ? 'lg:w-[52px]' : 'lg:w-[240px]'} w-[240px]`}>
 
         {/* Header */}
         <div className="flex-shrink-0">
           <div className={`flex items-center h-12 px-3 ${colapsado ? 'justify-center' : 'justify-between'}`}>
             {!colapsado ? (
               <>
-                <div className="flex items-center gap-2 px-1.5 py-1 flex-1 min-w-0">
-                  <DomLogo size={20} />
-                  <span className="text-sm font-semibold text-sidebar-text-active truncate">{datosUsuario?.empresa || 'DOM Platform'}</span>
+                <div className="flex items-center gap-2.5 px-1 py-1 flex-1 min-w-0">
+                  <ALarifeLogoMarca size={24} />
+                  <div className="min-w-0">
+                    <span className="text-[14px] font-semibold text-sidebar-text-active tracking-tight">A-LARIFE</span>
+                    <p className="text-[9px] text-sidebar-text/50 tracking-widest uppercase leading-none mt-0.5">Estudios de Proyectos</p>
+                  </div>
                 </div>
                 <button onClick={onCerrar} className="lg:hidden p-1 rounded text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover"><X className="h-4 w-4" /></button>
                 <button onClick={onToggleColapsar} className="hidden lg:flex p-1 rounded text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover"><ChevronLeft className="h-4 w-4" /></button>
@@ -80,7 +86,8 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
           {!colapsado && (
             <div className="px-2 pb-2">
               <button className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active transition-colors text-[13px]">
-                <Search className="h-4 w-4 flex-shrink-0" /><span>Buscar</span>
+                <Search className="h-4 w-4 flex-shrink-0" />
+                <span>Buscar</span>
                 <kbd className="ml-auto text-[10px] text-sidebar-text/60 bg-sidebar-hover px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
               </button>
             </div>
@@ -96,16 +103,16 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
               </SidebarSection>
 
               <SidebarSection titulo="Workspace" abierto={workspaceAbierto} onToggle={() => setWorkspaceAbierto(!workspaceAbierto)}>
-                {filtrar(enlacesPrincipales).map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
+                {enlacesPrincipales.map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
               </SidebarSection>
 
               <SidebarSection titulo="Control de Obra" abierto={obraAbierto} onToggle={() => setObraAbierto(!obraAbierto)}>
-                {filtrar(enlacesObra).map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
+                {enlacesObra.map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
               </SidebarSection>
 
-              {filtrar(enlacesConfig).length > 0 && (
+              {enlacesConfig.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5">
-                  {filtrar(enlacesConfig).map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
+                  {enlacesConfig.map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
                 </div>
               )}
             </>
@@ -126,12 +133,12 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
           {!colapsado ? (
             <div className="p-2">
               <div className="flex items-center gap-2.5 px-2 py-2 rounded-md">
-                <div className="h-7 w-7 rounded-md bg-gradient-to-br from-dom-400 to-dom-600 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[11px] font-bold text-white">{datosUsuario?.nombre?.charAt(0)?.toUpperCase() || 'U'}</span>
+                <div className="h-7 w-7 rounded-md bg-gradient-to-br from-[#2C4A7C] to-[#1A2B4A] flex items-center justify-center flex-shrink-0 border border-[#C9A84C]/30">
+                  <span className="text-[11px] font-bold text-[#C9A84C]">{datosUsuario?.nombre?.charAt(0)?.toUpperCase() || 'A'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-medium text-sidebar-text-active truncate">{datosUsuario?.nombre || 'Usuario'}</p>
-                  <p className="text-[11px] text-sidebar-text/60 capitalize">{datosUsuario?.rol || 'gestor'}</p>
+                  <p className="text-[10px] text-sidebar-text/60 capitalize">{datosUsuario?.rolGlobal || datosUsuario?.rol || 'gestor'}</p>
                 </div>
                 <button onClick={cerrarSesion} className="p-1 rounded text-sidebar-text/40 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Cerrar sesión">
                   <LogOut className="h-3.5 w-3.5" />
