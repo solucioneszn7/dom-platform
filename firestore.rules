@@ -1,0 +1,154 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== HELPER FUNCTIONS =====
+
+    // User is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Get user role from Firestore
+    function getUserRole() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol;
+    }
+
+    // Check if user has specific role
+    function hasRole(role) {
+      return isAuth() && getUserRole() == role;
+    }
+
+    // Check if user has any of the listed roles
+    function hasAnyRole(roles) {
+      return isAuth() && getUserRole() in roles;
+    }
+
+    // Is admin or director
+    function isPrivileged() {
+      return hasAnyRole(['admin', 'director_general', 'jefe_depto']);
+    }
+
+    // Is project owner (gestorId matches)
+    function isProjectOwner(projectId) {
+      return isAuth() && get(/databases/$(database)/documents/proyectos/$(projectId)).data.gestorId == request.auth.uid;
+    }
+
+    // Rate limit: max document size
+    function isReasonableSize() {
+      return request.resource.data.keys().size() < 50;
+    }
+
+    // ===== USUARIOS =====
+    match /usuarios/{userId} {
+      // Users can read their own profile
+      allow read: if isAuth() && (request.auth.uid == userId || isPrivileged());
+      // Users can create their own profile on signup
+      allow create: if isAuth() && request.auth.uid == userId;
+      // Only admins can update roles, users can update their own non-role fields
+      allow update: if isAuth() && (
+        request.auth.uid == userId && !('rol' in request.resource.data && request.resource.data.rol != resource.data.rol)
+        || hasRole('admin')
+      );
+      // Only admin can delete
+      allow delete: if hasRole('admin');
+    }
+
+    // ===== PROYECTOS =====
+    match /proyectos/{projectId} {
+      // Authenticated users can read projects (filtered in app by role)
+      allow read: if isAuth();
+      // Create: authenticated users with proper roles
+      allow create: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor']);
+      // Update: owner, admin, or privileged
+      allow update: if isAuth() && (
+        resource.data.gestorId == request.auth.uid
+        || isPrivileged()
+        || hasAnyRole(['tecnico_estudio', 'gestor'])
+      );
+      // Delete: only admin
+      allow delete: if hasRole('admin');
+
+      // ===== PARTIDAS (BC3 data) =====
+      match /partidas/{partidaId} {
+        allow read: if isAuth();
+        allow create, update: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra']);
+        allow delete: if isPrivileged();
+      }
+
+      // ===== PRESUPUESTO =====
+      match /presupuesto/{docId} {
+        allow read: if isAuth();
+        allow create, update: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor']);
+        allow delete: if isPrivileged();
+      }
+
+      // ===== EMPRESAS =====
+      match /empresas/{empresaId} {
+        allow read: if isAuth();
+        allow create, update: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra']);
+        allow delete: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'gestor']);
+      }
+
+      // ===== CERTIFICACIONES =====
+      match /certificaciones/{certId} {
+        allow read: if isAuth();
+        // Create: roles with editarCert permission
+        allow create: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor']);
+        // Update: depends on state
+        allow update: if isAuth() && (
+          // Admin/Director can edit any state
+          hasAnyRole(['admin', 'director_general'])
+          // Others can only edit borrador/pendiente
+          || (hasAnyRole(['jefe_depto', 'tecnico_estudio', 'gestor'])
+              && resource.data.estado in ['borrador', 'pendiente'])
+        );
+        // Delete: only privileged roles, or borrador by creator
+        allow delete: if isAuth() && (
+          hasAnyRole(['admin', 'director_general'])
+          || (hasAnyRole(['jefe_depto']) && resource.data.estado == 'borrador')
+        );
+      }
+
+      // ===== CONTRATOS =====
+      match /contratos/{contratoId} {
+        allow read: if isAuth();
+        allow create, update: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'gestor']);
+        allow delete: if isPrivileged();
+      }
+
+      // ===== TRAMITACIONES =====
+      match /tramitaciones/{tramId} {
+        allow read: if isAuth();
+        allow create, update: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor']);
+        allow delete: if isPrivileged();
+      }
+    }
+
+    // ===== ESTUDIOS (Licitaciones) =====
+    match /estudios/{estudioId} {
+      // Read: any authenticated user
+      allow read: if isAuth();
+      // Create: roles that can initiate estudios
+      allow create: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor']);
+      // Update: same roles
+      allow update: if isAuth() && hasAnyRole(['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor']);
+      // Delete: only privileged
+      allow delete: if isPrivileged();
+    }
+
+    // ===== SINCRONIZACIONES (log de syncs con PLACE u otras fuentes) =====
+    match /sincronizaciones/{syncId} {
+      // Read: any authenticated user (para mostrar histórico)
+      allow read: if isAuth();
+      // Write: only admins/privileged (las Cloud Functions usan admin SDK, saltan estas reglas)
+      allow create, update: if isPrivileged();
+      allow delete: if hasRole('admin');
+    }
+
+    // ===== DENY EVERYTHING ELSE =====
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
