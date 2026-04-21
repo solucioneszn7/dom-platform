@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Settings, LogOut, X,
-  ChevronLeft, ChevronRight, Star, ChevronsUpDown,
+  ChevronLeft, ChevronRight, ChevronsUpDown, Search,
   Users, CalendarDays, FileCheck2, Ruler, Shield, Briefcase,
 } from 'lucide-react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
@@ -11,7 +11,7 @@ import { useAuth } from '../../contextos/ContextoAutenticacion'
 function DomLogo({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="8" fill="#3371ff" />
+      <rect width="32" height="32" rx="8" fill="#0ea5e9" />
       <path d="M8 10h6a6 6 0 010 12H8V10z" fill="white" opacity="0.9" />
       <circle cx="22" cy="16" r="4" fill="white" opacity="0.7" />
     </svg>
@@ -30,7 +30,6 @@ function IconoGantt({ className }) {
 
 export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleColapsar }) {
   const { datosUsuario, cerrarSesion } = useAuth()
-  const [favoritosAbierto, setFavoritosAbierto] = useState(true)
   const [workspaceAbierto, setWorkspaceAbierto] = useState(true)
   const [obraAbierto, setObraAbierto] = useState(true)
 
@@ -68,7 +67,7 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
               <>
                 <div className="flex items-center gap-2 px-1.5 py-1 flex-1 min-w-0">
                   <DomLogo size={20} />
-                  <span className="text-sm font-semibold text-sidebar-text-active truncate">{datosUsuario?.empresa || 'DOM Platform'}</span>
+                  <span className="text-sm font-semibold text-sidebar-text-active truncate">{datosUsuario?.empresa || 'Acua-conect'}</span>
                 </div>
                 <button onClick={onCerrar} className="lg:hidden p-1 rounded text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover"><X className="h-4 w-4" /></button>
                 <button onClick={onToggleColapsar} className="hidden lg:flex p-1 rounded text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover"><ChevronLeft className="h-4 w-4" /></button>
@@ -91,9 +90,6 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
         <nav className="flex-1 overflow-y-auto sidebar-scroll px-2 py-1">
           {!colapsado ? (
             <>
-              <SidebarSection titulo="Favoritos" abierto={favoritosAbierto} onToggle={() => setFavoritosAbierto(!favoritosAbierto)}>
-                <SidebarLink enlace={{ ruta: '/dashboard', nombre: 'Dashboard', icono: () => <Star className="h-4 w-4 flex-shrink-0 fill-amber-400 text-amber-400" /> }} onCerrar={onCerrar} />
-              </SidebarSection>
 
               <SidebarSection titulo="Workspace" abierto={workspaceAbierto} onToggle={() => setWorkspaceAbierto(!workspaceAbierto)}>
                 {filtrar(enlacesPrincipales).map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}

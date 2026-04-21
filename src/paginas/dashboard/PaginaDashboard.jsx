@@ -71,7 +71,7 @@ export default function PaginaDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Tarjeta>
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-gray-800">Proyectos recientes</h3>
+              <h3 className="text-[13px] font-semibold text-gray-800">Obras en Estudios</h3>
               <Link to="/proyectos/nuevo" className="text-[11px] text-dom-600 hover:text-dom-700 font-medium flex items-center gap-1"><Plus className="h-3 w-3" />Nuevo</Link>
             </div>
             {proyectos.length === 0 ? (
@@ -120,41 +120,67 @@ export default function PaginaDashboard() {
         </div>
       </Section>
 
-      {/* SECTION 2: GESTIÓN Y ORGANIZACIÓN */}
-      <Section titulo="Gestión y Organización" icono={CalendarDays} desc="Calendario, agenda y notas rápidas">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Tarjeta className="lg:col-span-1">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-gray-800">Calendario</h3>
-              <Link to="/calendario" className="text-[11px] text-dom-600 font-medium flex items-center gap-1">Abrir<ArrowRight className="h-3 w-3" /></Link>
-            </div>
-            <TarjetaCuerpo>
-              <MiniCalendar />
-              <Link to="/calendario" className="mt-3 flex items-center justify-center gap-2 p-2.5 bg-dom-50 text-dom-700 rounded-lg text-[12px] font-medium hover:bg-dom-100 transition-colors"><CalendarDays className="h-3.5 w-3.5" />Google Calendar</Link>
-            </TarjetaCuerpo>
-          </Tarjeta>
-          <Tarjeta className="lg:col-span-2">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-gray-800">Notas rápidas</h3>
-              <StickyNote className="h-3.5 w-3.5 text-gray-300" />
-            </div>
-            <TarjetaCuerpo>
-              <div className="flex gap-2 mb-3">
-                <input type="text" placeholder="Escribe una nota..." value={nuevaNota} onChange={e => setNuevaNota(e.target.value)} onKeyDown={e => e.key === 'Enter' && guardarNota()}
-                  className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm placeholder-gray-400 focus:border-dom-500 focus:outline-none focus:ring-1 focus:ring-dom-500/30" />
-                <Boton tamano="sm" icono={Plus} onClick={guardarNota} disabled={!nuevaNota.trim()}>Añadir</Boton>
+      {/* SECTION 2: GESTIÓN Y ORGANIZACIÓN — estilo Monday */}
+      <Section titulo="Gestión y Organización" icono={CalendarDays} desc="Calendario, agenda y tareas">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {/* Header tipo Monday */}
+          <div className="grid grid-cols-12 bg-gray-50 border-b border-gray-200 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="col-span-5 px-4 py-2.5">Tarea</div>
+            <div className="col-span-2 px-3 py-2.5 border-l border-gray-200">Estado</div>
+            <div className="col-span-2 px-3 py-2.5 border-l border-gray-200">Prioridad</div>
+            <div className="col-span-3 px-3 py-2.5 border-l border-gray-200">Fecha</div>
+          </div>
+          {/* Filas */}
+          {[
+            { tarea: 'Revisar licitaciones del día', estado: 'En curso', prioridad: 'Alta', fecha: 'Hoy', ec: 'bg-blue-100 text-blue-700', pc: 'bg-red-100 text-red-700' },
+            { tarea: 'Actualizar mediciones SHOSHU', estado: 'Pendiente', prioridad: 'Media', fecha: 'Esta semana', ec: 'bg-amber-100 text-amber-700', pc: 'bg-amber-100 text-amber-700' },
+            { tarea: 'Certificación mensual BC3', estado: 'Completado', prioridad: 'Alta', fecha: '30 abr', ec: 'bg-emerald-100 text-emerald-700', pc: 'bg-red-100 text-red-700' },
+            { tarea: 'Reunión con cliente DOM-2026', estado: 'Pendiente', prioridad: 'Baja', fecha: '2 may', ec: 'bg-amber-100 text-amber-700', pc: 'bg-gray-100 text-gray-500' },
+          ].map((r, i) => (
+            <div key={i} className="grid grid-cols-12 border-b border-gray-100 hover:bg-blue-50/30 transition-colors group">
+              <div className="col-span-5 px-4 py-3 flex items-center gap-2">
+                <div className="h-3.5 w-3.5 rounded border border-gray-300 group-hover:border-dom-400 flex-shrink-0 transition-colors" />
+                <span className="text-[13px] text-gray-800">{r.tarea}</span>
               </div>
-              <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
-                {notas.length === 0 ? <p className="text-center text-sm text-gray-400 py-6">Sin notas.</p> : notas.map(n => (
-                  <div key={n.id} className="group flex items-start gap-2 p-2.5 rounded-lg bg-gray-50 hover:bg-gray-100/80 transition-colors">
-                    <StickyNote className="h-3.5 w-3.5 text-amber-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0"><p className="text-[12px] text-gray-700">{n.texto}</p><p className="text-[10px] text-gray-400 mt-0.5">{new Date(n.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p></div>
-                    <button onClick={() => borrarNota(n.id)} className="opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"><Trash2 className="h-3 w-3" /></button>
-                  </div>
-                ))}
+              <div className="col-span-2 px-3 py-3 border-l border-gray-100 flex items-center">
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${r.ec}`}>{r.estado}</span>
               </div>
-            </TarjetaCuerpo>
-          </Tarjeta>
+              <div className="col-span-2 px-3 py-3 border-l border-gray-100 flex items-center">
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${r.pc}`}>{r.prioridad}</span>
+              </div>
+              <div className="col-span-3 px-3 py-3 border-l border-gray-100 flex items-center">
+                <span className="text-[12px] text-gray-500">{r.fecha}</span>
+              </div>
+            </div>
+          ))}
+          {/* Add row + Notas */}
+          <div className="grid grid-cols-12 border-b border-gray-100">
+            <div className="col-span-5 px-4 py-2.5">
+              <div className="flex gap-2 items-center">
+                <input type="text" placeholder="+ Nueva tarea..." value={nuevaNota} onChange={e => setNuevaNota(e.target.value)} onKeyDown={e => e.key === 'Enter' && guardarNota()}
+                  className="flex-1 text-[12px] text-gray-600 placeholder-gray-400 bg-transparent focus:outline-none" />
+                {nuevaNota.trim() && <button onClick={guardarNota} className="text-[10px] bg-dom-600 text-white px-2 py-0.5 rounded hover:bg-dom-700 transition-colors">Añadir</button>}
+              </div>
+            </div>
+          </div>
+          {/* Notas guardadas */}
+          {notas.length > 0 && (
+            <div className="px-4 py-3 bg-amber-50/40 border-t border-amber-100 space-y-1.5 max-h-[140px] overflow-y-auto">
+              {notas.map(n => (
+                <div key={n.id} className="group flex items-center gap-2">
+                  <StickyNote className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                  <span className="text-[11px] text-gray-600 flex-1">{n.texto}</span>
+                  <span className="text-[9px] text-gray-400">{new Date(n.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                  <button onClick={() => borrarNota(n.id)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"><Trash2 className="h-3 w-3" /></button>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Footer con calendario */}
+          <div className="px-4 py-3 flex items-center justify-between bg-gray-50/50 border-t border-gray-100">
+            <span className="text-[11px] text-gray-400">{notas.length} notas guardadas</span>
+            <Link to="/calendario" className="flex items-center gap-1.5 text-[11px] text-dom-600 font-medium hover:text-dom-700 transition-colors"><CalendarDays className="h-3.5 w-3.5" />Ver Calendario</Link>
+          </div>
         </div>
       </Section>
 
