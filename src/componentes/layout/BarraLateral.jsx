@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Settings, LogOut, X,
+  LayoutDashboard, Settings, LogOut, X, KanbanSquare as BoardIcon,
   ChevronLeft, ChevronRight, ChevronsUpDown, Search,
   Users, CalendarDays, FileCheck2, Ruler, Shield, Briefcase,
 } from 'lucide-react'
@@ -36,6 +36,7 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
   const enlacesPrincipales = [
     { ruta: '/dashboard', nombre: 'Dashboard', icono: LayoutDashboard, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
     { ruta: '/estudios', nombre: 'Licitaciones', icono: Briefcase, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor'] },
+    { ruta: '/tablero', nombre: 'Tablero', icono: BoardIcon, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
     { ruta: '/calendario', nombre: 'Calendario', icono: CalendarDays, roles: ['admin', 'director_general', 'jefe_depto', 'tecnico_estudio', 'gestor', 'jefe_obra'] },
   ]
 

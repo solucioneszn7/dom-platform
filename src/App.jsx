@@ -13,6 +13,7 @@ import PaginaCertificaciones from './paginas/certificaciones/PaginaCertificacion
 import PaginaViabilidad from './paginas/viabilidad/PaginaViabilidad'
 import PaginaConfiguracion from './paginas/configuracion/PaginaConfiguracion'
 import PaginaConsultaCliente from './paginas/cliente/PaginaConsultaCliente'
+import PaginaTablero from './paginas/tablero/PaginaTablero'
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/certificaciones" element={<PaginaCertificaciones />} />
         <Route path="/viabilidad" element={<PaginaViabilidad />} />
         <Route path="/configuracion" element={<PaginaConfiguracion />} />
+        <Route path="/tablero" element={<PaginaTablero />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/login" replace />} />

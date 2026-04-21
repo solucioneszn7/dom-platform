@@ -1,6 +1,8 @@
 // ===== Ficha de Obra — Detalle con checklist por fases =====
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../servicios/firebase'
 import {
   ArrowLeft, Save, Building2, Calendar, DollarSign, Users, FileText,
   CheckCircle, XCircle, AlertTriangle, Shield, Edit2, Trash2, X,
@@ -177,6 +179,12 @@ export default function PaginaFichaObra() {
             <div className="px-4 py-3 border-b border-gray-100"><h3 className="text-[13px] font-semibold text-gray-800">Estado</h3></div>
             <TarjetaCuerpo>
               <label className="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" checked={obra.vamos} onChange={() => toggle('vamos')} className="accent-emerald-600 h-4 w-4" /><span className="text-sm font-semibold text-gray-800">¡VAMOS!</span></label>
+              {obra.vamos && (
+                <button onClick={crearProyectoEnTablero} disabled={guardando} className="mt-2 w-full flex items-center justify-center gap-2 py-2 px-3 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[12px] font-semibold rounded-lg border border-sky-200 transition-colors disabled:opacity-50">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                  Crear proyecto en tablero
+                </button>
+              )}
               <label className="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" checked={obra.apertura} onChange={() => toggle('apertura')} className="accent-amber-600 h-4 w-4" /><span className="text-sm text-gray-700">Apertura realizada</span></label>
               <Field label="Valoración" value={obra.valoracion} onChange={v => set('valoracion', v)} />
             </TarjetaCuerpo>
