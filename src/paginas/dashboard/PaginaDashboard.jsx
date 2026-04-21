@@ -13,6 +13,7 @@ import { escucharProyectos } from '../../servicios/proyectos'
 import Tarjeta, { TarjetaCuerpo } from '../../componentes/ui/Tarjeta'
 import Boton from '../../componentes/ui/Boton'
 import Cargando from '../../componentes/ui/Cargando'
+import IndicadoresEquipo from '../../componentes/dashboard/IndicadoresEquipo'
 import toast from 'react-hot-toast'
 
 function IconoGantt({ className }) {
