@@ -6,7 +6,7 @@ import { db } from '../../servicios/firebase'
 import {
   ArrowLeft, Save, Building2, Calendar, DollarSign, Users, FileText,
   CheckCircle, XCircle, AlertTriangle, Shield, Edit2, Trash2, X,
-  Clock, Eye, Award, ChevronRight, Briefcase, Lock, ExternalLink,
+  Clock, Eye, Award, ChevronRight, Briefcase, Lock, ExternalLink, KanbanSquare,
 } from 'lucide-react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
 import { obtenerEstudio, actualizarEstudio, eliminarEstudio } from '../../servicios/estudios'
@@ -70,6 +70,11 @@ export default function PaginaFichaObra() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {obra?.vamos && (
+            <Boton variante="secundario" tamano="xs" icono={KanbanSquare} onClick={() => navigate(`/tablero?licitacion=${id}`)}>
+              Tablero
+            </Boton>
+          )}
           <Boton icono={Save} tamano="xs" cargando={guardando} onClick={guardar}>Guardar</Boton>
           <Boton variante="secundario" tamano="xs" icono={Trash2} onClick={borrar}>Eliminar</Boton>
         </div>

@@ -53,7 +53,7 @@ export default function PaginaTablero() {
   }
 
   return (
-    <div className="h-[calc(100vh-56px)] -mt-5 -mx-5 lg:-mx-8 overflow-hidden flex flex-col bg-gray-50">
+    <div className="h-[calc(100vh-56px)] -mt-5 -mx-5 lg:-mx-8 overflow-hidden flex flex-col bg-surface-secondary">
       {contexto && (
         <div className="flex-shrink-0 bg-white border-b border-gray-200 px-5 py-2.5 flex items-center gap-3 shadow-sm">
           <div className={`h-2 w-2 rounded-full ${contexto.tipo === 'proyecto' ? 'bg-emerald-500' : 'bg-sky-500'}`} />

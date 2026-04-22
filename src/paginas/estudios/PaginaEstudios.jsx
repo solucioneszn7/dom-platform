@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Search, X, ChevronDown, ChevronUp, SlidersHorizontal, Upload, Plus,
   Star, Filter, MessageSquare, Building2, Calendar, DollarSign,
-  Users, Save, Clock, AlertCircle, Radio, ExternalLink,
+  Users, Save, Clock, AlertCircle, Radio, ExternalLink, KanbanSquare,
 } from 'lucide-react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
 import {
@@ -80,7 +80,7 @@ function StatusBadge({ obra }) {
 }
 
 // ── Card ────────────────────────────────────────────────────────────────────────
-function Card({ obra, starred, onVer, onStar, onNota }) {
+function Card({ obra, starred, onVer, onStar, onNota, onTablero }) {
   const d = diasHasta(obra.fechaPresentacion)
   const urgente = d !== null && d >= 0 && d <= 3
   const proxima = d !== null && d > 3 && d <= 7
@@ -167,8 +167,17 @@ function Card({ obra, starred, onVer, onStar, onNota }) {
             {obra.notaInterna && <span className="text-[9px] text-blue-400 flex items-center gap-0.5"><MessageSquare className="h-2.5 w-2.5" />Nota</span>}
           </div>
 
-          {/* Checklist dots */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Checklist dots + Tablero */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {obra.vamos && (
+              <button
+                onClick={e => { e.stopPropagation(); onTablero(obra.id) }}
+                className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-1 rounded-md transition-colors"
+                title="Ir al tablero de esta licitación"
+              >
+                <KanbanSquare className="h-3 w-3" /> Tablero
+              </button>
+            )}
             {[['T', obra.docTecnica], ['A', obra.docAdministrativa], ['E', obra.estudioEconomico]].map(([l, v]) => (
               <div key={l} className={`h-4 w-4 rounded text-[8px] font-bold flex items-center justify-center ${v ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>{l}</div>
             ))}
@@ -475,7 +484,7 @@ export default function PaginaEstudios() {
           ) : (
             <div className="space-y-2">
               {resultados.map(o => (
-                <Card key={o.id} obra={o} starred={starred.includes(o.id)} onVer={id => navigate(`/estudios/${id}`)} onStar={toggleStar} onNota={setModalNota} />
+                <Card key={o.id} obra={o} starred={starred.includes(o.id)} onVer={id => navigate(`/estudios/${id}`)} onStar={toggleStar} onNota={setModalNota} onTablero={id => navigate(`/tablero?licitacion=${id}`)} />
               ))}
               <p className="text-center text-[11px] text-gray-400 py-4">{resultados.length} resultados · {FMT(stats.totalImporte)} en licitación</p>
             </div>

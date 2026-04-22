@@ -732,16 +732,29 @@ function Sidebar({ board, collapsed, onToggle }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
-export default function AquaConectBoard() {
-  const [board, setBoard]           = useState(INITIAL_BOARD)
+export default function AquaConectBoard({ initialData = null, onSave = null }) {
+  const [board, setBoard]           = useState(initialData || INITIAL_BOARD)
   const [activeView, setActiveView] = useState('table')
   const [editingName, setEditingName] = useState(false)
-  const [boardName, setBoardName]   = useState(INITIAL_BOARD.name)
+  const [boardName, setBoardName]   = useState((initialData || INITIAL_BOARD).name)
   const [search, setSearch]         = useState('')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Sync cuando llegan datos externos (Firebase)
+  useEffect(() => {
+    if (initialData) {
+      setBoard(initialData)
+      setBoardName(initialData.name || 'Tablero')
+    }
+  }, [initialData])
 
   // ── Mutations ─────────────────────────────────────────────────────────────
-  const update = useCallback((fn) => setBoard(prev => fn(prev)), [])
+  const update = useCallback((fn) => {
+    setBoard(prev => {
+      const next = fn(prev)
+      if (onSave) onSave(next)
+      return next
+    })
+  }, [onSave])
 
   const onCellChange = useCallback((itemId, colId, value) => {
     update(b => ({
@@ -827,10 +840,7 @@ export default function AquaConectBoard() {
   ]
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Sidebar */}
-      <Sidebar board={board} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />
-
+    <div className="flex flex-col h-full bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
@@ -865,7 +875,7 @@ export default function AquaConectBoard() {
                 </div>
               )}
               <button onClick={onAddGroup}
-                className="flex items-center gap-1.5 text-xs bg-sky-500 text-gray-900 px-3 py-1.5 rounded-lg hover:bg-sky-600 transition-colors font-medium shadow-sm shadow-sky-500/20">
+                className="flex items-center gap-1.5 text-xs bg-sky-500 text-white px-3 py-1.5 rounded-lg hover:bg-sky-600 transition-colors font-medium shadow-sm shadow-sky-500/20">
                 + Agregar grupo
               </button>
             </div>
