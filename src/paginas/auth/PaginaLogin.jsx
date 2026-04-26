@@ -71,14 +71,15 @@ export default function PaginaLogin() {
         <div className="relative z-10 text-center px-12 max-w-md">
           <DomLogo size={56} />
           <h2 className="text-[28px] font-bold text-gradient mt-6 tracking-tight">DOM Platform</h2>
-          <p className="text-white/55 mt-3 text-[14px] leading-relaxed max-w-xs mx-auto">
-            Gestión integral de tramitaciones y licitaciones. Control financiero, seguimiento documental y mediciones a origen.
+          <p className="text-white/55 mt-3 text-[14px] leading-relaxed max-w-sm mx-auto">
+            Plataforma integral para licitaciones, mediciones a origen, certificaciones, planificación BC3, viabilidad económica y tablero kanban.
           </p>
-          <div className="mt-10 space-y-2.5 text-left max-w-[300px] mx-auto">
+          <div className="mt-10 space-y-2.5 text-left max-w-[320px] mx-auto">
             {[
-              { txt: 'Tablero Kanban de proyectos', dot: 'bg-violet-400' },
-              { txt: 'Control financiero por contrato', dot: 'bg-pink-400' },
-              { txt: 'Seguimiento de fases DOM', dot: 'bg-cyan-400' },
+              { txt: 'Licitaciones (PLACE · BOE · ChileCompra)', dot: 'bg-violet-400' },
+              { txt: 'Mediciones a origen + Certificaciones', dot: 'bg-pink-400' },
+              { txt: 'Planificación BC3 & Viabilidad económica', dot: 'bg-cyan-400' },
+              { txt: 'Tablero Kanban + Tramitaciones DOM', dot: 'bg-emerald-400' },
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 glass-soft rounded-xl px-4 py-2.5">
                 <div className={`h-2 w-2 rounded-full ${feat.dot} shadow-md`} />

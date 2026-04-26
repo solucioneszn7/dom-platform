@@ -14,6 +14,8 @@ import {
   Star, MessageSquare, Building2, Calendar, Users, Save, Radio,
   ExternalLink, KanbanSquare, Sparkles, Zap, Filter, TrendingUp,
 } from 'lucide-react'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../servicios/firebase'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
 import {
   escucharEstudios, crearEstudio, actualizarEstudio,
@@ -424,9 +426,6 @@ function ModalNueva({ onClose, onCrear, datosPrerellenados = {} }) {
 // "Participar" → tarea Tablero (Firestore + localStorage bridge)
 // ─────────────────────────────────────────────────────────────────────────────
 async function crearTareaTablero(obra, datosUsuario) {
-  const { db } = await import('../../servicios/firebase')
-  const { collection, addDoc, serverTimestamp } = await import('firebase/firestore')
-
   const resumenEjecutivo = [
     obra.titulo,
     obra.cliente ? `Organismo: ${obra.cliente}` : null,
@@ -480,7 +479,7 @@ export default function PaginaEstudios() {
   // Escuchar licitaciones en tiempo real
   useEffect(() => {
     if (!usuario) return
-    const unsub = escucharEstudios(usuario.uid, data => {
+    const unsub = escucharEstudios(data => {
       setEstudios(data)
       setCargando(false)
     })

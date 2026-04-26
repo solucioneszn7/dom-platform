@@ -52,7 +52,7 @@ export default function PaginaRegistro() {
             </div>
           </div>
           <h1 className="text-[24px] font-bold text-gradient mt-4 tracking-tight">Crear Cuenta</h1>
-          <p className="text-[13px] text-white/55 mt-1">Regístrate para gestionar tus tramitaciones</p>
+          <p className="text-[13px] text-white/55 mt-1">Licitaciones · Mediciones · BC3 · Tablero</p>
         </div>
 
         <div className="glass-strong rounded-2xl p-6">
