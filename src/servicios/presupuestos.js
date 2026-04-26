@@ -52,30 +52,11 @@ export async function verificarCambiosDrive(driveToken, fileId) {
 
 export async function guardarPresupuesto(proyectoId, parseResult, archivoNombre, driveFileId = null) {
   const ref = doc(db, 'proyectos', proyectoId, 'presupuesto', 'datos')
-
-  // For large files (>500 partidas), don't store full arbol (exceeds Firestore 1MB limit)
-  // Store only chapter summary instead
-  const totalPartidas = parseResult.partidasFlat?.length || 0
-  let arbolData = null
-  if (totalPartidas <= 500) {
-    arbolData = JSON.stringify(parseResult.arbol)
-  } else {
-    // Store lightweight summary: only chapters with names and totals
-    const resumenArbol = parseResult.arbol.map(cap => ({
-      codigo: cap.codigo, nombre: cap.nombre, tipo: cap.tipo,
-      precioUnitario: cap.precioUnitario, nivel: cap.nivel,
-      totalHijos: cap.hijos?.length || 0,
-      hijos: [], apu: [],
-    }))
-    arbolData = JSON.stringify(resumenArbol)
-  }
-
   await setDoc(ref, {
     archivoNombre, driveFileId,
     version: parseResult.version, moneda: parseResult.moneda,
     coeficientes: parseResult.coeficientes, resumen: parseResult.resumen,
-    arbol: arbolData,
-    esArchivoGrande: totalPartidas > 500,
+    arbol: JSON.stringify(parseResult.arbol),
     ultimaSincronizacion: serverTimestamp(), fechaCarga: serverTimestamp(),
   })
 
@@ -107,12 +88,12 @@ async function sincronizarPartidas(proyectoId, partidasNuevas) {
   const mapaExistentes = new Map()
   existentes.forEach(d => mapaExistentes.set(d.data().codigo, { id: d.id, ...d.data() }))
 
-  // Firestore batch limit = 500 ops. Chunk writes.
-  const ops = []
+  const batch = writeBatch(db)
 
   for (const p of partidasNuevas) {
     const existe = mapaExistentes.get(p.codigo)
     if (existe) {
+      // MERGE: Update prices/quantities but PRESERVE measurements and empresa
       const updates = {
         nombre: p.nombre, descripcion: p.descripcion, unidad: p.unidad,
         precioUnitario: p.precioUnitario, cantidadPresupuestada: p.cantidadPresupuestada,
@@ -124,33 +105,24 @@ async function sincronizarPartidas(proyectoId, partidasNuevas) {
         updates._alertaCambio = true
         updates._cambioDetalle = `Precio: ${existe.precioUnitario}→${p.precioUnitario}, Cant: ${existe.cantidadPresupuestada}→${p.cantidadPresupuestada}`
       }
-      ops.push({ type: 'update', ref: doc(ref, existe.id), data: updates })
+      batch.update(doc(ref, existe.id), updates)
       mapaExistentes.delete(p.codigo)
     } else {
-      ops.push({ type: 'set', ref: doc(ref), data: { ...p, fechaCreacion: serverTimestamp() } })
+      // New partida
+      batch.set(doc(ref), { ...p, fechaCreacion: serverTimestamp() })
     }
   }
 
+  // Partidas that no longer exist in BC3 — mark as removed (don't delete if they have data)
   for (const [, vieja] of mapaExistentes) {
     if (vieja.avanceAcumulado > 0 || vieja.bloqueado) {
-      ops.push({ type: 'update', ref: doc(ref, vieja.id), data: { _eliminadaEnBC3: true } })
+      batch.update(doc(ref, vieja.id), { _eliminadaEnBC3: true })
     } else {
-      ops.push({ type: 'delete', ref: doc(ref, vieja.id) })
+      batch.delete(doc(ref, vieja.id))
     }
   }
 
-  // Execute in chunks of 400 (Firestore limit is 500)
-  const CHUNK = 400
-  for (let i = 0; i < ops.length; i += CHUNK) {
-    const chunk = ops.slice(i, i + CHUNK)
-    const batch = writeBatch(db)
-    for (const op of chunk) {
-      if (op.type === 'set') batch.set(op.ref, op.data)
-      else if (op.type === 'update') batch.update(op.ref, op.data)
-      else if (op.type === 'delete') batch.delete(op.ref)
-    }
-    await batch.commit()
-  }
+  await batch.commit()
 }
 
 export function escucharPartidas(proyectoId, callback) {
@@ -185,24 +157,19 @@ export async function registrarMedicion(proyectoId, partidaId, avanceAcumulado, 
 
 // Batch save multiple measurements
 export async function guardarMedicionesBatch(proyectoId, mediciones) {
+  const batch = writeBatch(db)
   const ref = collection(db, 'proyectos', proyectoId, 'partidas')
-  const CHUNK = 400
 
-  for (let i = 0; i < mediciones.length; i += CHUNK) {
-    const batch = writeBatch(db)
-    const chunk = mediciones.slice(i, i + CHUNK)
-
-    for (const { partidaId, avanceAcumulado, precioUnitario, cantidadPresupuestada } of chunk) {
-      const imp = avanceAcumulado * precioUnitario
-      const pct = cantidadPresupuestada > 0 ? Math.min(100, Math.round((avanceAcumulado / cantidadPresupuestada) * 100)) : 0
-      batch.update(doc(ref, partidaId), {
-        avanceAcumulado, importeEjecutado: imp, porcentaje: pct,
-        estado: avanceAcumulado >= cantidadPresupuestada ? 'completada' : avanceAcumulado > 0 ? 'en_ejecucion' : 'pendiente',
-        fechaActualizacion: serverTimestamp(),
-      })
-    }
-    await batch.commit()
+  for (const { partidaId, avanceAcumulado, precioUnitario, cantidadPresupuestada } of mediciones) {
+    const imp = avanceAcumulado * precioUnitario
+    const pct = cantidadPresupuestada > 0 ? Math.min(100, Math.round((avanceAcumulado / cantidadPresupuestada) * 100)) : 0
+    batch.update(doc(ref, partidaId), {
+      avanceAcumulado, importeEjecutado: imp, porcentaje: pct,
+      estado: avanceAcumulado >= cantidadPresupuestada ? 'completada' : avanceAcumulado > 0 ? 'en_ejecucion' : 'pendiente',
+      fechaActualizacion: serverTimestamp(),
+    })
   }
+  await batch.commit()
 }
 
 // ===================================================================
@@ -335,39 +302,4 @@ export async function eliminarCertificacion(proyectoId, certId) {
 // Editar empresa
 export async function actualizarEmpresa(proyectoId, empresaId, datos) {
   await updateDoc(doc(db, 'proyectos', proyectoId, 'empresas', empresaId), { ...datos, fechaActualizacion: serverTimestamp() })
-}
-
-// ===================================================================
-// VIABILIDAD — Datos editables vinculados al proyecto
-// ===================================================================
-
-export async function guardarViabilidad(proyectoId, datos) {
-  const ref = doc(db, 'proyectos', proyectoId, 'presupuesto', 'viabilidad')
-  await setDoc(ref, { ...datos, fechaActualizacion: serverTimestamp() }, { merge: true })
-}
-
-export async function obtenerViabilidad(proyectoId) {
-  const snap = await getDoc(doc(db, 'proyectos', proyectoId, 'presupuesto', 'viabilidad'))
-  return snap.exists() ? snap.data() : null
-}
-
-export function escucharViabilidad(proyectoId, callback) {
-  return onSnapshot(doc(db, 'proyectos', proyectoId, 'presupuesto', 'viabilidad'), snap => {
-    callback(snap.exists() ? snap.data() : null)
-  })
-}
-
-// Guardar indirectos editables
-export async function guardarIndirectos(proyectoId, indirectos) {
-  await guardarViabilidad(proyectoId, { indirectos, indirectosActualizados: serverTimestamp() })
-}
-
-// Guardar coeficientes de paso editables
-export async function guardarCoeficientes(proyectoId, coeficientes) {
-  await guardarViabilidad(proyectoId, { coeficientes, coeficientesActualizados: serverTimestamp() })
-}
-
-// Guardar datos de cierre
-export async function guardarDatosCierre(proyectoId, cierre) {
-  await guardarViabilidad(proyectoId, { cierre, cierreActualizado: serverTimestamp() })
 }

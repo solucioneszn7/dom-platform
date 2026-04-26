@@ -14,6 +14,7 @@ import PaginaViabilidad from './paginas/viabilidad/PaginaViabilidad'
 import PaginaConfiguracion from './paginas/configuracion/PaginaConfiguracion'
 import PaginaConsultaCliente from './paginas/cliente/PaginaConsultaCliente'
 import PaginaTablero from './paginas/tablero/PaginaTablero'
+import PaginaPlanificacion from './paginas/planificacion/PaginaPlanificacion'
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/estudios" element={<PaginaEstudios />} />
         <Route path="/estudios/:id" element={<PaginaFichaObra />} />
         <Route path="/calendario" element={<PaginaCalendario />} />
+        <Route path="/planificacion" element={<PaginaPlanificacion />} />
         <Route path="/mediciones" element={<PaginaMediciones />} />
         <Route path="/certificaciones" element={<PaginaCertificaciones />} />
         <Route path="/viabilidad" element={<PaginaViabilidad />} />
