@@ -6,7 +6,8 @@ import { ProveedorAutenticacion } from './contextos/ContextoAutenticacion'
 import App from './App.jsx'
 import './index.css'
 
-if (localStorage.getItem('dom-tema-oscuro') === 'true') {
+// Dark glassmorphism aurora es ahora el default (a menos que el usuario haya optado por light)
+if (localStorage.getItem('dom-tema-oscuro') !== 'false') {
   document.documentElement.classList.add('dark')
 }
 

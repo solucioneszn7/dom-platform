@@ -1,10 +1,10 @@
-// ===== Tarjeta — Notion-style card =====
+// ===== Tarjeta — Glass card =====
 export default function Tarjeta({ children, className = '', hover = false, ...props }) {
   return (
     <div
       className={`
-        bg-white rounded-lg border border-gray-200/80
-        ${hover ? 'hover:bg-surface-hover transition-colors duration-150 cursor-pointer' : ''}
+        card-premium
+        ${hover ? 'cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:shadow-[0_24px_60px_rgba(0,0,0,.45)]' : ''}
         ${className}
       `}
       {...props}
@@ -16,7 +16,7 @@ export default function Tarjeta({ children, className = '', hover = false, ...pr
 
 export function TarjetaEncabezado({ children, className = '' }) {
   return (
-    <div className={`px-5 py-3.5 border-b border-gray-100 ${className}`}>
+    <div className={`px-5 py-3.5 border-b border-white/[0.06] ${className}`}>
       {children}
     </div>
   )

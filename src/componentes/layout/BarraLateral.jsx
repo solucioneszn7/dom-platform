@@ -1,20 +1,25 @@
-// ===== Barra Lateral — Notion-style dark sidebar (FIXED v2) =====
+// ===== Barra Lateral — Glass dark con gradient logo + premium active states =====
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Settings, LogOut, X, KanbanSquare as BoardIcon,
-  ChevronLeft, ChevronRight, ChevronsUpDown, Search,
+  ChevronLeft, ChevronRight, Search, Sparkles,
   Users, CalendarDays, FileCheck2, Ruler, Shield, Briefcase,
 } from 'lucide-react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
 
-function DomLogo({ size = 20 }) {
+function DomLogo({ size = 24 }) {
+  // Gradient violet→pink→cyan logo
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="8" fill="#0ea5e9" />
-      <path d="M8 10h6a6 6 0 010 12H8V10z" fill="white" opacity="0.9" />
-      <circle cx="22" cy="16" r="4" fill="white" opacity="0.7" />
-    </svg>
+    <div
+      className="rounded-xl flex items-center justify-center shadow-lg"
+      style={{
+        width: size, height: size,
+        background: 'linear-gradient(135deg, #7c4dff 0%, #ff5a8a 50%, #4dc7ff 100%)',
+      }}
+    >
+      <Sparkles className="text-white" style={{ width: size * 0.55, height: size * 0.55 }} />
+    </div>
   )
 }
 
@@ -57,31 +62,36 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
 
   return (
     <>
-      {abierta && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onCerrar} />}
+      {abierta && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" onClick={onCerrar} />}
 
-      <aside className={`fixed top-0 left-0 z-50 h-full bg-sidebar flex flex-col transform transition-all duration-200 ease-out select-none lg:static lg:z-auto ${abierta ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${colapsado ? 'lg:w-[52px]' : 'lg:w-[260px]'} w-[260px]`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full sidebar-glass flex flex-col transform transition-all duration-200 ease-out select-none lg:static lg:z-auto ${abierta ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${colapsado ? 'lg:w-[64px]' : 'lg:w-[260px]'} w-[260px]`}>
 
         {/* Header */}
         <div className="flex-shrink-0">
-          <div className={`flex items-center h-12 px-3 ${colapsado ? 'justify-center' : 'justify-between'}`}>
+          <div className={`flex items-center h-14 px-3 ${colapsado ? 'justify-center' : 'justify-between'}`}>
             {!colapsado ? (
               <>
-                <div className="flex items-center gap-2 px-1.5 py-1 flex-1 min-w-0">
-                  <DomLogo size={20} />
-                  <span className="text-sm font-semibold text-sidebar-text-active truncate">{datosUsuario?.empresa || 'Acua-conect'}</span>
+                <div className="flex items-center gap-2.5 px-1 flex-1 min-w-0">
+                  <DomLogo size={28} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-white truncate leading-tight">{datosUsuario?.empresa || 'Acua-Conect'}</p>
+                    <p className="text-[10.5px] text-white/40 truncate">DOM Platform</p>
+                  </div>
                 </div>
-                <button onClick={onCerrar} className="lg:hidden p-1 rounded text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover"><X className="h-4 w-4" /></button>
-                <button onClick={onToggleColapsar} className="hidden lg:flex p-1 rounded text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover"><ChevronLeft className="h-4 w-4" /></button>
+                <button onClick={onCerrar} className="lg:hidden p-1 rounded text-white/45 hover:text-white hover:bg-white/[0.06]"><X className="h-4 w-4" /></button>
+                <button onClick={onToggleColapsar} className="hidden lg:flex p-1 rounded text-white/45 hover:text-white hover:bg-white/[0.06]"><ChevronLeft className="h-4 w-4" /></button>
               </>
             ) : (
-              <button onClick={onToggleColapsar} className="p-1.5 rounded text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover"><ChevronRight className="h-4 w-4" /></button>
+              <button onClick={onToggleColapsar} className="p-1.5 rounded text-white/45 hover:text-white hover:bg-white/[0.06]">
+                <ChevronRight className="h-4 w-4" />
+              </button>
             )}
           </div>
           {!colapsado && (
             <div className="px-2 pb-2">
-              <button className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active transition-colors text-[13px]">
-                <Search className="h-4 w-4 flex-shrink-0" /><span>Buscar</span>
-                <kbd className="ml-auto text-[10px] text-sidebar-text/60 bg-sidebar-hover px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
+              <button className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-white/55 hover:bg-white/[0.05] hover:text-white transition-colors text-[12.5px]">
+                <Search className="h-3.5 w-3.5 flex-shrink-0" /><span>Buscar</span>
+                <kbd className="ml-auto text-[10px] text-white/40 bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
               </button>
             </div>
           )}
@@ -91,7 +101,6 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
         <nav className="flex-1 overflow-y-auto sidebar-scroll px-2 py-1">
           {!colapsado ? (
             <>
-
               <SidebarSection titulo="Workspace" abierto={workspaceAbierto} onToggle={() => setWorkspaceAbierto(!workspaceAbierto)}>
                 {filtrar(enlacesPrincipales).map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
               </SidebarSection>
@@ -101,7 +110,7 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
               </SidebarSection>
 
               {filtrar(enlacesConfig).length > 0 && (
-                <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5">
+                <div className="mt-2 pt-2 border-t border-white/[0.06] space-y-0.5">
                   {filtrar(enlacesConfig).map(e => <SidebarLink key={e.ruta} enlace={e} onCerrar={onCerrar} />)}
                 </div>
               )}
@@ -110,7 +119,7 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
             <div className="flex flex-col items-center gap-1 mt-2">
               {todosEnlaces.map(e => (
                 <NavLink key={e.ruta} to={e.ruta} title={e.nombre}
-                  className={({ isActive }) => `p-2 rounded-md transition-colors ${isActive ? 'bg-sidebar-active text-sidebar-text-active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active'}`}>
+                  className={({ isActive }) => `relative p-2.5 rounded-lg transition-all ${isActive ? 'bg-violet-500/20 text-violet-200 shadow-[inset_0_0_0_1px_rgba(124,77,255,.3)]' : 'text-white/55 hover:bg-white/[0.06] hover:text-white'}`}>
                   <e.icono className="h-4 w-4" />
                 </NavLink>
               ))}
@@ -119,25 +128,26 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
         </nav>
 
         {/* User */}
-        <div className="flex-shrink-0 border-t border-white/5">
+        <div className="flex-shrink-0 border-t border-white/[0.06]">
           {!colapsado ? (
             <div className="p-2">
-              <div className="flex items-center gap-2.5 px-2 py-2 rounded-md">
-                <div className="h-7 w-7 rounded-md bg-gradient-to-br from-dom-400 to-dom-600 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[11px] font-bold text-white">{datosUsuario?.nombre?.charAt(0)?.toUpperCase() || 'U'}</span>
+              <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl glass-soft">
+                <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md"
+                  style={{ background: 'linear-gradient(135deg, #7c4dff 0%, #ff5a8a 100%)' }}>
+                  <span className="text-[12px] font-bold text-white">{datosUsuario?.nombre?.charAt(0)?.toUpperCase() || 'U'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-sidebar-text-active truncate">{datosUsuario?.nombre || 'Usuario'}</p>
-                  <p className="text-[11px] text-sidebar-text/60 capitalize">{datosUsuario?.rol || 'gestor'}</p>
+                  <p className="text-[12.5px] font-semibold text-white truncate leading-tight">{datosUsuario?.nombre || 'Usuario'}</p>
+                  <p className="text-[10.5px] text-white/45 capitalize truncate">{datosUsuario?.rol || 'gestor'}</p>
                 </div>
-                <button onClick={cerrarSesion} className="p-1 rounded text-sidebar-text/40 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Cerrar sesión">
+                <button onClick={cerrarSesion} className="p-1.5 rounded-md text-white/40 hover:text-rose-300 hover:bg-rose-500/15 transition-colors" title="Cerrar sesión">
                   <LogOut className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex justify-center py-3">
-              <button onClick={cerrarSesion} className="p-2 rounded-md text-sidebar-text/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"><LogOut className="h-4 w-4" /></button>
+              <button onClick={cerrarSesion} className="p-2 rounded-md text-white/40 hover:text-rose-300 hover:bg-rose-500/15 transition-colors"><LogOut className="h-4 w-4" /></button>
             </div>
           )}
         </div>
@@ -149,7 +159,7 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
 function SidebarSection({ titulo, abierto, onToggle, children }) {
   return (
     <div className="mb-1">
-      <button onClick={onToggle} className="flex items-center gap-1 w-full px-2 py-1 text-[11px] font-medium uppercase tracking-wider text-sidebar-text/50 hover:text-sidebar-text/80 transition-colors">
+      <button onClick={onToggle} className="flex items-center gap-1 w-full px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-white/35 hover:text-white/65 transition-colors">
         <svg className={`h-3 w-3 transition-transform ${abierto ? '' : '-rotate-90'}`} viewBox="0 0 12 12" fill="currentColor"><path d="M4 3l4 3-4 3V3z" /></svg>
         {titulo}
       </button>
@@ -161,9 +171,16 @@ function SidebarSection({ titulo, abierto, onToggle, children }) {
 function SidebarLink({ enlace, onCerrar }) {
   return (
     <NavLink to={enlace.ruta} onClick={onCerrar}
-      className={({ isActive }) => `group flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${isActive ? 'bg-sidebar-active text-sidebar-text-active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active'}`}>
-      <enlace.icono className="h-4 w-4 flex-shrink-0" />
-      <span className="truncate flex-1">{enlace.nombre}</span>
+      className={({ isActive }) => `group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-all ${isActive ? 'bg-violet-500/15 text-white shadow-[inset_0_0_0_1px_rgba(124,77,255,.25)]' : 'text-white/60 hover:bg-white/[0.05] hover:text-white'}`}>
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-gradient-to-b from-violet-400 to-pink-400" />
+          )}
+          <enlace.icono className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-violet-300' : ''}`} />
+          <span className="truncate flex-1 font-medium">{enlace.nombre}</span>
+        </>
+      )}
     </NavLink>
   )
 }
