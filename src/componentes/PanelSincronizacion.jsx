@@ -9,20 +9,23 @@ import { obtenerLicitacionesChile, sincronizarDesdeChile } from '../servicios/ch
 import Boton from './ui/Boton'
 import toast from 'react-hot-toast'
 
-const CLOUD_FN_URL = import.meta.env.VITE_SYNC_PLACE_URL ||
-  'https://europe-west1-tramitacion-webdom.cloudfunctions.net/syncPlace'
+// Cloud Function opcional (si está desplegada). Si no responde, hacemos fallback automático al proxy CORS público.
+const CLOUD_FN_URL = import.meta.env.VITE_SYNC_PLACE_URL || ''
 
 const FUENTES = [
   { id: 'place', label: 'PLACE', desc: 'España — Contratación del Sector Público', color: 'blue', disponible: true },
   { id: 'boe',   label: 'BOE',   desc: 'España — Boletín Oficial del Estado',      color: 'amber', disponible: true },
-  { id: 'chile', label: 'Mercado Público', desc: 'Chile — ChileCompra (requiere ticket)', color: 'red', disponible: false },
+  { id: 'chile', label: 'Mercado Público', desc: 'Chile — ChileCompra (con ticket API)', color: 'red', disponible: true },
 ]
 
 export default function PanelSincronizacion({ onClose, onCompletado }) {
   const [fuenteActiva, setFuenteActiva] = useState('place')
   const [config, setConfig] = useState({
     fechaDesde: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0],
-    tipContrato: 2, importeMin: 500000, modo: 'cloud', ticketChile: '',
+    tipContrato: 2, importeMin: 500000,
+    // Por defecto modo browser (proxy CORS público). Si hay Cloud Function desplegada, el usuario puede cambiar a 'cloud'.
+    modo: CLOUD_FN_URL ? 'cloud' : 'browser',
+    ticketChile: '',
   })
   const [estado, setEstado] = useState('idle')
   const [progreso, setProgreso] = useState(0)
@@ -40,27 +43,46 @@ export default function PanelSincronizacion({ onClose, onCompletado }) {
 
   const cargando = estado === 'cargando' || estado === 'sincronizando'
 
+  // Fallback: PLACE vía proxy CORS browser
+  async function syncPlaceBrowser() {
+    setProgreso(40)
+    const licitaciones = await obtenerLicitacionesPLACE({
+      fechaDesde: config.fechaDesde,
+      importeMin: config.importeMin,
+      tipContrato: config.tipContrato,
+    })
+    setProgreso(70); setEstado('sincronizando')
+    return sincronizarDesdePLACE(licitaciones)
+  }
+
   async function ejecutar() {
     setEstado('cargando'); setProgreso(10); setResultado(null)
     try {
-      let licitaciones = []
       if (fuenteActiva === 'place') {
-        if (config.modo === 'cloud') {
+        // Cloud Function (rápido) con fallback automático a proxy CORS si falla / no existe
+        if (config.modo === 'cloud' && CLOUD_FN_URL) {
           setProgreso(30)
-          const r = await fetch(CLOUD_FN_URL, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fechaDesde: config.fechaDesde, tipContrato: config.tipContrato, importeMin: config.importeMin }),
-          })
-          setProgreso(80)
-          const data = await r.json()
-          if (!data.ok) throw new Error(data.error)
-          setResultado(data); setEstado('ok')
-          toast.success(`PLACE: ${data.importadas} importadas`); onCompletado?.(); return
+          try {
+            const r = await fetch(CLOUD_FN_URL, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fechaDesde: config.fechaDesde, tipContrato: config.tipContrato, importeMin: config.importeMin }),
+            })
+            setProgreso(80)
+            const data = await r.json().catch(() => ({}))
+            if (!r.ok || !data.ok) throw new Error(data.error || `Cloud Function HTTP ${r.status}`)
+            setResultado(data); setEstado('ok')
+            toast.success(`PLACE: ${data.importadas} importadas`); onCompletado?.(); return
+          } catch (cfErr) {
+            toast(`Cloud Function no disponible — usando proxy del navegador`, { icon: '↺', duration: 3500 })
+            const r = await syncPlaceBrowser()
+            setResultado(r); setEstado('ok')
+            toast.success(`PLACE: ${r.importadas} importadas`); onCompletado?.(); return
+          }
         } else {
-          licitaciones = await obtenerLicitacionesPLACE({ fechaDesde: config.fechaDesde, importeMin: config.importeMin, tipContrato: config.tipContrato })
-          setProgreso(60); setEstado('sincronizando')
-          const r = await sincronizarDesdePLACE(licitaciones)
-          setResultado(r); setEstado('ok'); toast.success(`PLACE: ${r.importadas} importadas`); onCompletado?.(); return
+          // Modo browser explícito
+          const r = await syncPlaceBrowser()
+          setResultado(r); setEstado('ok')
+          toast.success(`PLACE: ${r.importadas} importadas`); onCompletado?.(); return
         }
       } else if (fuenteActiva === 'boe') {
         setProgreso(30)

@@ -179,6 +179,9 @@ export default function PaginaFichaObra() {
 
         {/* RIGHT: Sidebar info */}
         <div className="space-y-4">
+          {/* Fuente oficial — vínculos al organismo */}
+          <FuenteOficial obra={obra} />
+
           {/* Estado */}
           <Tarjeta>
             <div className="px-4 py-3 border-b border-gray-100"><h3 className="text-[13px] font-semibold text-gray-800">Estado</h3></div>
@@ -270,5 +273,113 @@ function ActionLink({ label, desc, to, icon: I }) {
     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => navigate(to)}>
       <I className="h-4 w-4 text-dom-500 flex-shrink-0" /><div className="flex-1"><p className="text-[12px] font-medium text-gray-800">{label}</p><p className="text-[10px] text-gray-400">{desc}</p></div><ChevronRight className="h-3.5 w-3.5 text-gray-300" />
     </div>
+  )
+}
+
+// ===== Fuente oficial — links al organismo (PLACE / BOE / ChileCompra) =====
+const FUENTES = {
+  place:       { label: 'PLACE',       color: 'violet', desc: 'Plataforma de Contratación del Sector Público (España)', portal: 'https://contrataciondelestado.es' },
+  boe:         { label: 'BOE',         color: 'amber',  desc: 'Boletín Oficial del Estado (España)',                     portal: 'https://www.boe.es' },
+  chilecompra: { label: 'ChileCompra', color: 'cyan',   desc: 'Mercado Público (Chile)',                                  portal: 'https://www.mercadopublico.cl' },
+  manual:      { label: 'Manual',      color: 'gray',   desc: 'Cargado manualmente o desde Access',                       portal: null },
+}
+
+function FuenteOficial({ obra }) {
+  const codigo = (obra.origenFuente || 'manual').toLowerCase()
+  const fuente = FUENTES[codigo] || FUENTES.manual
+  const url = obra.urlPlataforma || obra.url || ''
+  const expediente = obra.idExterno || ''
+  const cpv = obra.cpv || ''
+  const cpvDesc = obra.cpvDescripcion || ''
+  const fechaPub = obra.fechaPublicacionExterna || ''
+  const organismo = obra.cliente || ''
+
+  // Color classes por fuente (Tailwind necesita classes literales para no purgar)
+  const colorMap = {
+    violet:  { bg: 'bg-violet-50',  text: 'text-violet-700',  border: 'border-violet-200',  dot: 'bg-violet-500' },
+    amber:   { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',   dot: 'bg-amber-500' },
+    cyan:    { bg: 'bg-cyan-50',    text: 'text-cyan-700',    border: 'border-cyan-200',    dot: 'bg-cyan-500' },
+    gray:    { bg: 'bg-gray-100',   text: 'text-gray-700',    border: 'border-gray-200',    dot: 'bg-gray-400' },
+  }
+  const c = colorMap[fuente.color] || colorMap.gray
+
+  // Si no hay URL ni expediente externos, mostrar versión "Manual"
+  const tieneFuente = url || expediente || codigo !== 'manual'
+
+  return (
+    <Tarjeta>
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <h3 className="text-[13px] font-semibold text-gray-800">Fuente oficial</h3>
+        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ${c.bg} ${c.text} border ${c.border} flex items-center gap-1.5`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+          {fuente.label}
+        </span>
+      </div>
+      <TarjetaCuerpo>
+        {!tieneFuente ? (
+          <p className="text-[11.5px] text-gray-500 leading-snug">
+            Esta licitación se cargó manualmente. No hay enlace al portal del organismo. {fuente.desc}
+          </p>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-[11px] text-gray-500 leading-snug">{fuente.desc}</p>
+
+            {/* Botón principal: ir al expediente / portal */}
+            {url && (
+              <a href={url} target="_blank" rel="noopener noreferrer"
+                className={`flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg ${c.bg} ${c.text} ${c.border} border text-[12px] font-semibold transition-colors hover:opacity-85`}>
+                <ExternalLink className="h-3.5 w-3.5" />
+                Ver expediente y pliegos en {fuente.label}
+              </a>
+            )}
+            {!url && fuente.portal && (
+              <a href={fuente.portal} target="_blank" rel="noopener noreferrer"
+                className={`flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg ${c.bg} ${c.text} ${c.border} border text-[12px] font-semibold transition-colors hover:opacity-85`}>
+                <ExternalLink className="h-3.5 w-3.5" />
+                Ir al portal {fuente.label}
+              </a>
+            )}
+
+            {/* Datos del expediente */}
+            <div className="space-y-1.5 pt-1 text-[11.5px]">
+              {expediente && (
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-gray-400 uppercase text-[10px] tracking-wide">Nº expediente</span>
+                  <span className="font-mono text-gray-800 truncate" title={expediente}>{expediente}</span>
+                </div>
+              )}
+              {organismo && (
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-gray-400 uppercase text-[10px] tracking-wide">Organismo</span>
+                  <span className="text-gray-800 text-right" title={organismo}>{organismo}</span>
+                </div>
+              )}
+              {cpv && (
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-gray-400 uppercase text-[10px] tracking-wide">CPV</span>
+                  <span className="font-mono text-gray-800">{cpv}</span>
+                </div>
+              )}
+              {cpvDesc && (
+                <p className="text-[11px] text-gray-500 leading-snug pt-0.5">{cpvDesc}</p>
+              )}
+              {fechaPub && (
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-gray-400 uppercase text-[10px] tracking-wide">Publicada</span>
+                  <span className="text-gray-700">{new Date(fechaPub).toLocaleDateString('es-ES')}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Hint sobre pliegos */}
+            {url && (
+              <p className="text-[10px] text-gray-400 leading-snug border-t border-gray-100 pt-2">
+                Los pliegos, anexos y aclaraciones del organismo están en la página oficial del expediente.
+              </p>
+            )}
+          </div>
+        )}
+      </TarjetaCuerpo>
+    </Tarjeta>
   )
 }

@@ -322,8 +322,10 @@ function GroupFooter({ group, columns }) {
 }
 
 // ─── FILA ITEM ───────────────────────────────────────────────────────────────
-function RowItem({ item, columns, onCellChange, onDeleteItem, groupColor }) {
+function RowItem({ item, columns, onCellChange, onDeleteItem, onOpenItem, groupColor }) {
   const [hovered, setHovered] = useState(false)
+  const tieneVinculo = !!(item._licitacionId || item._proyectoId)
+  const tipoVinculo = item._licitacionId ? 'licitación' : item._proyectoId ? 'proyecto' : null
 
   return (
     <div className="flex border-b border-gray-100 hover:bg-sky-50/20 transition-colors"
@@ -335,11 +337,20 @@ function RowItem({ item, columns, onCellChange, onDeleteItem, groupColor }) {
         <div key={col.id} className="flex-shrink-0 border-r border-gray-100 relative overflow-visible"
           style={{ width: col.width ?? 120, height: '100%' }}>
           {i === 0 && hovered && (
-            <button onClick={() => onDeleteItem(item.id)}
-              title="Eliminar tarea"
-              className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded hover:bg-red-50 text-gray-300 hover:text-red-400 text-sm z-10 flex items-center justify-center transition-colors">
-              ×
-            </button>
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
+              {tieneVinculo && onOpenItem && (
+                <button onClick={(e) => { e.stopPropagation(); onOpenItem(item) }}
+                  title={`Abrir ${tipoVinculo}`}
+                  className="w-5 h-5 rounded hover:bg-sky-100 text-sky-400 hover:text-sky-600 text-sm flex items-center justify-center transition-colors">
+                  ↗
+                </button>
+              )}
+              <button onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id) }}
+                title="Eliminar tarea"
+                className="w-5 h-5 rounded hover:bg-red-50 text-gray-300 hover:text-red-400 text-sm flex items-center justify-center transition-colors">
+                ×
+              </button>
+            </div>
           )}
           <Cell col={col} value={item.cells[col.id]} item={item} onCellChange={onCellChange} />
         </div>
@@ -403,7 +414,7 @@ function ColumnHeader({ col, onRemove }) {
 }
 
 // ─── SECCIÓN DE GRUPO ────────────────────────────────────────────────────────
-function GroupSection({ group, columns, onCellChange, onAddItem, onDeleteItem, onToggleCollapse, onRenameGroup, onRemoveGroup, onAddColumn, onRemoveColumn }) {
+function GroupSection({ group, columns, onCellChange, onAddItem, onDeleteItem, onOpenItem, onToggleCollapse, onRenameGroup, onRemoveGroup, onAddColumn, onRemoveColumn }) {
   const [renaming, setRenaming] = useState(false)
   const [groupName, setGroupName] = useState(group.name)
   const [showAddCol, setShowAddCol] = useState(false)
@@ -457,7 +468,7 @@ function GroupSection({ group, columns, onCellChange, onAddItem, onDeleteItem, o
           {/* Rows */}
           {group.items.map(item => (
             <RowItem key={item.id} item={item} columns={columns}
-              onCellChange={onCellChange} onDeleteItem={onDeleteItem} groupColor={group.color} />
+              onCellChange={onCellChange} onDeleteItem={onDeleteItem} onOpenItem={onOpenItem} groupColor={group.color} />
           ))}
 
           {/* Add Item */}
@@ -475,7 +486,7 @@ function GroupSection({ group, columns, onCellChange, onAddItem, onDeleteItem, o
 }
 
 // ─── VISTA KANBAN ─────────────────────────────────────────────────────────────
-function KanbanView({ board, onCellChange }) {
+function KanbanView({ board, onCellChange, onOpenItem }) {
   const allItems = board.groups.flatMap(g => g.items)
 
   return (
@@ -490,8 +501,19 @@ function KanbanView({ board, onCellChange }) {
               <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full ml-auto">{items.length}</span>
             </div>
             <div className="space-y-2">
-              {items.map(item => (
-                <div key={item.id} className="bg-white rounded-xl border border-gray-200 p-3.5 hover:shadow-md transition-shadow">
+              {items.map(item => {
+                const tieneVinculo = !!(item._licitacionId || item._proyectoId)
+                const tipoVinculo = item._licitacionId ? 'Licitación' : item._proyectoId ? 'Proyecto' : null
+                return (
+                <div key={item.id}
+                  className={`bg-white rounded-xl border border-gray-200 p-3.5 transition-all relative ${tieneVinculo && onOpenItem ? 'cursor-pointer hover:shadow-md hover:border-sky-300' : 'hover:shadow-md'}`}
+                  onClick={tieneVinculo && onOpenItem ? () => onOpenItem(item) : undefined}
+                  title={tieneVinculo && onOpenItem ? `Abrir ${tipoVinculo.toLowerCase()}` : undefined}>
+                  {tipoVinculo && (
+                    <span className="absolute top-2 right-2 text-[9px] uppercase tracking-wide font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded ring-1 ring-sky-100">
+                      {tipoVinculo} ↗
+                    </span>
+                  )}
                   <p className="text-sm font-medium text-gray-800 mb-2.5">{item.cells.name || 'Sin título'}</p>
                   <div className="space-y-1.5">
                     {item.cells.owner && (
@@ -509,7 +531,8 @@ function KanbanView({ board, onCellChange }) {
                     )}
                   </div>
                 </div>
-              ))}
+                )
+              })}
               {items.length === 0 && (
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center text-xs text-gray-400">
                   Sin tareas
@@ -732,7 +755,7 @@ function Sidebar({ board, collapsed, onToggle }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
-export default function AquaConectBoard({ initialData = null, onSave = null }) {
+export default function AquaConectBoard({ initialData = null, onSave = null, onOpenItem = null }) {
   const [board, setBoard]           = useState(initialData || INITIAL_BOARD)
   const [activeView, setActiveView] = useState('table')
   const [editingName, setEditingName] = useState(false)
@@ -901,7 +924,7 @@ export default function AquaConectBoard({ initialData = null, onSave = null }) {
             <div className="p-4 min-w-max">
               {filteredBoard.groups.map(group => (
                 <GroupSection key={group.id} group={group} columns={board.columns}
-                  onCellChange={onCellChange} onAddItem={onAddItem} onDeleteItem={onDeleteItem}
+                  onCellChange={onCellChange} onAddItem={onAddItem} onDeleteItem={onDeleteItem} onOpenItem={onOpenItem}
                   onToggleCollapse={onToggleCollapse} onRenameGroup={onRenameGroup} onRemoveGroup={onRemoveGroup}
                   onAddColumn={onAddColumn} onRemoveColumn={onRemoveColumn} />
               ))}
@@ -913,7 +936,7 @@ export default function AquaConectBoard({ initialData = null, onSave = null }) {
           )}
 
           {activeView === 'kanban' && (
-            <KanbanView board={filteredBoard} onCellChange={onCellChange} />
+            <KanbanView board={filteredBoard} onCellChange={onCellChange} onOpenItem={onOpenItem} />
           )}
 
           {activeView === 'calendar' && (

@@ -1,6 +1,6 @@
 // PaginaTablero.jsx — Agente Programador 2: recibe tareas desde "Participar"
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
 import { db } from '../../servicios/firebase'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
@@ -14,9 +14,22 @@ import toast from 'react-hot-toast'
 
 export default function PaginaTablero() {
   const { usuario } = useAuth()
+  const navegar = useNavigate()
   const [searchParams] = useSearchParams()
   const proyectoId   = searchParams.get('proyecto')
   const licitacionId = searchParams.get('licitacion')
+
+  // Click en row del tablero → ficha vinculada
+  function abrirItem(item) {
+    if (item._licitacionId) {
+      navegar(`/estudios/${item._licitacionId}`)
+    } else if (item._proyectoId) {
+      // No hay ruta /proyectos/:id, llevamos a planificación con el proyecto contexto
+      navegar(`/planificacion?proyecto=${item._proyectoId}`)
+    } else {
+      toast('Esta tarea no está vinculada a un proyecto o licitación', { icon: 'ℹ️' })
+    }
+  }
   const [boardData, setBoardData] = useState(null)
   const [contexto, setContexto]   = useState(null)
   const [nuevasTareas, setNuevasTareas] = useState(0)
@@ -121,6 +134,7 @@ export default function PaginaTablero() {
         <AquaConectBoard
           initialData={boardData}
           onSave={guardarBoard}
+          onOpenItem={abrirItem}
           licitacionStatusOptions={LICITACION_STATUS_OPTIONS}
         />
       </div>
