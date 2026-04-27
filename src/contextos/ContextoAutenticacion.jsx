@@ -81,14 +81,16 @@ export function ProveedorAutenticacion({ children }) {
     return signInWithEmailAndPassword(auth, email, contrasena)
   }
 
-  // Registrar nuevo usuario
-  async function registrarse(email, contrasena, nombre) {
+  // Registrar nuevo usuario — incluye país (jurisdicción) y aceptación de T&C
+  async function registrarse(email, contrasena, nombre, pais = 'OTRO', aceptoTerminos = false) {
+    if (!aceptoTerminos) throw new Error('Debes aceptar los Términos y la Política de Privacidad para continuar.')
+
     const credencial = await createUserWithEmailAndPassword(auth, email, contrasena)
 
     // Actualizar nombre en Firebase Auth
     await updateProfile(credencial.user, { displayName: nombre })
 
-    // Crear documento en Firestore
+    // Crear documento en Firestore con jurisdicción y rastro de aceptación
     await setDoc(doc(db, 'usuarios', credencial.user.uid), {
       uid: credencial.user.uid,
       nombre,
@@ -97,14 +99,18 @@ export function ProveedorAutenticacion({ children }) {
       telefono: '',
       rol: ROLES.GESTOR,
       empresa: '',
+      pais: String(pais).toUpperCase(),
+      aceptoTerminos: true,
+      fechaAceptacionTerminos: serverTimestamp(),
+      versionTerminosAceptada: '2026-04-26',
       fechaCreacion: serverTimestamp(),
     })
 
     return credencial
   }
 
-  // Iniciar sesión con Google
-  async function iniciarConGoogle() {
+  // Iniciar sesión con Google — para nuevos usuarios pide jurisdicción al primer login
+  async function iniciarConGoogle(paisDeclarado = null) {
     const credencial = await signInWithPopup(auth, proveedorGoogle)
 
     // Verificar si ya existe en Firestore
@@ -112,6 +118,7 @@ export function ProveedorAutenticacion({ children }) {
     const docSnap = await getDoc(docRef)
 
     if (!docSnap.exists()) {
+      // Usuario nuevo — registrar con país declarado (o pendiente si no se pasó)
       await setDoc(docRef, {
         uid: credencial.user.uid,
         nombre: credencial.user.displayName || '',
@@ -120,11 +127,25 @@ export function ProveedorAutenticacion({ children }) {
         telefono: '',
         rol: ROLES.GESTOR,
         empresa: '',
+        pais: paisDeclarado ? String(paisDeclarado).toUpperCase() : 'OTRO',
+        aceptoTerminos: true, // El login con Google implica aceptación si se confirma en UI
+        fechaAceptacionTerminos: serverTimestamp(),
+        versionTerminosAceptada: '2026-04-26',
         fechaCreacion: serverTimestamp(),
       })
+    } else if (paisDeclarado && !docSnap.data().pais) {
+      // Usuario existente sin país — actualizar
+      await setDoc(docRef, { pais: String(paisDeclarado).toUpperCase() }, { merge: true })
     }
 
     return credencial
+  }
+
+  // Actualizar jurisdicción del usuario (desde Configuración)
+  async function actualizarJurisdiccion(pais) {
+    if (!usuario) return
+    await setDoc(doc(db, 'usuarios', usuario.uid), { pais: String(pais).toUpperCase() }, { merge: true })
+    setDatosUsuario(prev => prev ? { ...prev, pais: String(pais).toUpperCase() } : prev)
   }
 
   // Cerrar sesión
@@ -141,6 +162,7 @@ export function ProveedorAutenticacion({ children }) {
     iniciarSesion,
     registrarse,
     iniciarConGoogle,
+    actualizarJurisdiccion,
     cerrarSesion,
     esAdmin: datosUsuario?.rol === ROLES.ADMIN,
     esGestor: datosUsuario?.rol === ROLES.GESTOR || datosUsuario?.rol === ROLES.TECNICO_ESTUDIO,

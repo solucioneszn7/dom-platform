@@ -6,10 +6,10 @@ import { ProveedorAutenticacion } from './contextos/ContextoAutenticacion'
 import App from './App.jsx'
 import './index.css'
 
-// Dark glassmorphism aurora es ahora el default (a menos que el usuario haya optado por light)
-if (localStorage.getItem('dom-tema-oscuro') !== 'false') {
-  document.documentElement.classList.add('dark')
-}
+// Modo oscuro PERMANENTE — sin toggle, sin override del usuario
+document.documentElement.classList.add('dark')
+document.documentElement.style.colorScheme = 'dark'
+try { localStorage.removeItem('dom-tema-oscuro') } catch {}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

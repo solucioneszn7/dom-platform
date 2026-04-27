@@ -30,7 +30,7 @@ export function generarResumenSemanal(proyectos, nombreUsuario) {
   const activos = proyectos.filter(p => p.estado === 'activo')
   const completados = proyectos.filter(p => p.estado === 'completado')
 
-  let resumen = `Resumen Semanal — DOM Platform\n`
+  let resumen = `Resumen Semanal — Acua Conect\n`
   resumen += `${fecha}\n`
   resumen += `Hola ${nombreUsuario},\n\n`
   resumen += `=== ESTADO DE PROYECTOS ===\n`

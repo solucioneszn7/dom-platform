@@ -15,6 +15,8 @@ import PaginaConfiguracion from './paginas/configuracion/PaginaConfiguracion'
 import PaginaConsultaCliente from './paginas/cliente/PaginaConsultaCliente'
 import PaginaTablero from './paginas/tablero/PaginaTablero'
 import PaginaPlanificacion from './paginas/planificacion/PaginaPlanificacion'
+import PaginaPrivacidad from './paginas/legal/PaginaPrivacidad'
+import PaginaTerminos from './paginas/legal/PaginaTerminos'
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
       <Route path="/login" element={<PaginaLogin />} />
       <Route path="/registro" element={<PaginaRegistro />} />
       <Route path="/consulta" element={<PaginaConsultaCliente />} />
+      <Route path="/privacidad" element={<PaginaPrivacidad />} />
+      <Route path="/terminos" element={<PaginaTerminos />} />
 
       <Route element={
         <RutaProtegida rolesPermitidos={['admin','director_general','jefe_depto','tecnico_estudio','gestor','jefe_obra','encargado']}>

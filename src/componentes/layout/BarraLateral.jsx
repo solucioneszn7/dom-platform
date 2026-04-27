@@ -74,8 +74,8 @@ export default function BarraLateral({ abierta, colapsado, onCerrar, onToggleCol
                 <div className="flex items-center gap-2.5 px-1 flex-1 min-w-0">
                   <DomLogo size={28} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-semibold text-white truncate leading-tight">{datosUsuario?.empresa || 'Acua-Conect'}</p>
-                    <p className="text-[10.5px] text-white/40 truncate">DOM Platform</p>
+                    <p className="text-[13.5px] font-semibold text-white truncate leading-tight">Acua Conect</p>
+                    <p className="text-[10.5px] text-white/40 truncate">{datosUsuario?.empresa || 'Construction OS'}</p>
                   </div>
                 </div>
                 <button onClick={onCerrar} className="lg:hidden p-1 rounded text-white/45 hover:text-white hover:bg-white/[0.06]"><X className="h-4 w-4" /></button>

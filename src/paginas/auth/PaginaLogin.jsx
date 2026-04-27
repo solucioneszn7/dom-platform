@@ -70,7 +70,7 @@ export default function PaginaLogin() {
         </div>
         <div className="relative z-10 text-center px-12 max-w-md">
           <DomLogo size={56} />
-          <h2 className="text-[28px] font-bold text-gradient mt-6 tracking-tight">DOM Platform</h2>
+          <h2 className="text-[28px] font-bold text-gradient mt-6 tracking-tight">Acua Conect</h2>
           <p className="text-white/55 mt-3 text-[14px] leading-relaxed max-w-sm mx-auto">
             Plataforma integral para licitaciones, mediciones a origen, certificaciones, planificación BC3, viabilidad económica y tablero kanban.
           </p>
@@ -79,7 +79,7 @@ export default function PaginaLogin() {
               { txt: 'Licitaciones (PLACE · BOE · ChileCompra)', dot: 'bg-violet-400' },
               { txt: 'Mediciones a origen + Certificaciones', dot: 'bg-pink-400' },
               { txt: 'Planificación BC3 & Viabilidad económica', dot: 'bg-cyan-400' },
-              { txt: 'Tablero Kanban + Tramitaciones DOM', dot: 'bg-emerald-400' },
+              { txt: 'Tablero Kanban + control de obra', dot: 'bg-emerald-400' },
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 glass-soft rounded-xl px-4 py-2.5">
                 <div className={`h-2 w-2 rounded-full ${feat.dot} shadow-md`} />
@@ -96,7 +96,7 @@ export default function PaginaLogin() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <div className="flex justify-center mb-3"><DomLogo /></div>
-            <h1 className="text-[20px] font-bold text-white">DOM Platform</h1>
+            <h1 className="text-[20px] font-bold text-white">Acua Conect</h1>
           </div>
 
           <div className="lg:mb-8">
@@ -140,6 +140,21 @@ export default function PaginaLogin() {
           <p className="text-center text-[12px] text-white/45 mt-2">
             <Link to="/consulta" className="hover:text-white/70 transition-colors">Consulta tu caso (clientes)</Link>
           </p>
+
+          {/* Aviso de responsabilidad + accesos legales */}
+          <div className="mt-6 p-3.5 rounded-xl border border-amber-400/20 bg-amber-500/[0.06]">
+            <p className="text-[10.5px] text-amber-100/80 leading-snug">
+              <strong className="text-amber-200">Aviso:</strong> al registrarte indicas el país donde usarás la plataforma; aplicaremos su normativa.
+              Eres responsable de revisar, fiscalizar y aprobar cualquier información generada antes de usarla en actos profesionales,
+              administrativos o contractuales. Esta plataforma facilita herramientas; no garantiza responsabilidad alguna por
+              decisiones que ejecutes a partir de sus resultados.
+            </p>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-white/45">
+            <Link to="/privacidad" className="hover:text-white/80 transition-colors">Privacidad</Link>
+            <span>·</span>
+            <Link to="/terminos" className="hover:text-white/80 transition-colors">Términos</Link>
+          </div>
         </div>
       </div>
     </div>

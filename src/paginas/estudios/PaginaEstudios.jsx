@@ -638,16 +638,18 @@ export default function PaginaEstudios() {
     try {
       const { obras } = await leerArchivoAccess(file)
       toast.loading(`Procesando ${obras.length} oportunidades…`, { id })
-      await importarEstudiosDesdeJSON(obras)
-      toast.success(`${obras.length} oportunidades importadas`, { id })
+      const r = await importarEstudiosDesdeJSON(obras)
+      const r2 = (typeof r === 'object' && r !== null) ? r : { importadas: obras.length, actualizadas: 0 }
+      toast.success(`${r2.importadas} nuevas · ${r2.actualizadas} actualizadas`, { id })
     } catch (err) { toast.error(err.message, { id }) }
   }
 
   const handleSeedData = async () => {
     const id = toast.loading('Cargando datos de demostración…')
     try {
-      await importarEstudiosDesdeJSON(OBRAS_SEED)
-      toast.success('Portafolio de demostración cargado', { id })
+      const r = await importarEstudiosDesdeJSON(OBRAS_SEED)
+      const r2 = (typeof r === 'object' && r !== null) ? r : { importadas: 0, actualizadas: 0 }
+      toast.success(`Demo: ${r2.importadas} nuevas · ${r2.actualizadas} actualizadas`, { id })
     } catch (err) { toast.error(err.message, { id }) }
   }
 

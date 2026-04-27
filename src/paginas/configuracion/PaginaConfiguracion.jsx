@@ -186,7 +186,7 @@ export default function PaginaConfiguracion() {
                       <h3 className="font-bold text-gray-900 text-base">Política de Privacidad y Tratamiento de Datos Personales</h3>
                       <p className="text-xs text-gray-500">Última actualización: abril 2026</p>
 
-                      <p><strong>1. Responsable del Tratamiento.</strong> DOM Platform (en adelante, "la Plataforma"), operada por zn Soluciones, con domicilio en Málaga, España, es responsable del tratamiento de los datos personales de sus usuarios conforme a la Ley N°19.628 sobre Protección de la Vida Privada de Chile y la Ley N°21.719 sobre Protección de Datos Personales y creación de la Agencia de Protección de Datos Personales.</p>
+                      <p><strong>1. Responsable del Tratamiento.</strong> Acua Conect (en adelante, "la Plataforma"), operada por zn Soluciones, con domicilio en Málaga, España, es responsable del tratamiento de los datos personales de sus usuarios conforme a la Ley N°19.628 sobre Protección de la Vida Privada de Chile y la Ley N°21.719 sobre Protección de Datos Personales y creación de la Agencia de Protección de Datos Personales.</p>
 
                       <p><strong>2. Datos que Recopilamos.</strong> La Plataforma recopila exclusivamente los siguientes datos: nombre completo, correo electrónico, número de teléfono, RUT, nombre de empresa u oficina profesional. Adicionalmente, se almacena la información técnica relativa a proyectos, tramitaciones, contratos y flujos de caja que el usuario registre voluntariamente.</p>
 
@@ -208,18 +208,18 @@ export default function PaginaConfiguracion() {
                     </>
                   ) : (
                     <>
-                      <h3 className="font-bold text-gray-900 text-base">Términos y Condiciones de Uso — DOM Platform</h3>
+                      <h3 className="font-bold text-gray-900 text-base">Términos y Condiciones de Uso — Acua Conect</h3>
                       <p className="text-xs text-gray-500">Última actualización: abril 2026</p>
 
-                      <p><strong>1. Naturaleza del Servicio.</strong> DOM Platform es una <strong>plataforma de gestión interna</strong> diseñada para organizar, visualizar y administrar información de proyectos de construcción, contratos y flujos de caja. La Plataforma es una herramienta de uso interno que facilita el orden y seguimiento de la información ingresada por el usuario.</p>
+                      <p><strong>1. Naturaleza del Servicio.</strong> Acua Conect es una <strong>plataforma de gestión interna</strong> diseñada para organizar, visualizar y administrar información de proyectos de construcción, contratos y flujos de caja. La Plataforma es una herramienta de uso interno que facilita el orden y seguimiento de la información ingresada por el usuario.</p>
 
-                      <p><strong>2. Alcance del Servicio.</strong> La Plataforma permite: organizar documentación de proyectos, registrar contratos y presupuestos, hacer seguimiento de avances financieros, y generar reportes internos. <strong>DOM Platform no realiza trámites municipales, no gestiona permisos ante la DOM ni ante ninguna entidad pública o privada.</strong></p>
+                      <p><strong>2. Alcance del Servicio.</strong> La Plataforma permite: organizar documentación de proyectos, registrar contratos y presupuestos, hacer seguimiento de avances financieros, y generar reportes internos. <strong>Acua Conect no realiza trámites municipales, no gestiona permisos ante la DOM ni ante ninguna entidad pública o privada.</strong></p>
 
                       <p><strong>3. Responsabilidad del Usuario.</strong> El usuario es el único responsable de la información que registre en la Plataforma, incluyendo datos de proyectos, montos y documentación. La Plataforma no verifica ni garantiza la exactitud de los datos ingresados.</p>
 
                       <p><strong>4. Disponibilidad.</strong> El servicio se ofrece según disponibilidad. La Plataforma podrá suspender o modificar funcionalidades previa notificación cuando sea posible.</p>
 
-                      <p><strong>5. Propiedad Intelectual.</strong> El software y diseño de DOM Platform son propiedad de sus desarrolladores. El usuario conserva la titularidad sobre su información.</p>
+                      <p><strong>5. Propiedad Intelectual.</strong> El software y diseño de Acua Conect son propiedad de sus desarrolladores. El usuario conserva la titularidad sobre su información.</p>
                     </>
                   )}
                 </div>
@@ -241,7 +241,7 @@ export default function PaginaConfiguracion() {
                     </label>
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input type="checkbox" checked={terminosAceptados} onChange={(e) => setTerminosAceptados(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-dom-600 focus:ring-dom-500" />
-                      <span className="text-sm text-gray-700">He leído y acepto los <strong>Términos y Condiciones de Uso</strong> de DOM Platform.</span>
+                      <span className="text-sm text-gray-700">He leído y acepto los <strong>Términos y Condiciones de Uso</strong> de Acua Conect.</span>
                     </label>
                     <Boton icono={FileCheck} cargando={guardandoPoliticas} onClick={aceptarPoliticas} disabled={!politicasAceptadas || !terminosAceptados}>Aceptar Documentos Legales</Boton>
                   </div>

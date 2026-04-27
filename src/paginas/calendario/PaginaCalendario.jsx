@@ -101,7 +101,7 @@ export default function PaginaCalendario() {
             </div>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Conectar Google Calendar</h2>
             <p className="text-sm text-gray-400 max-w-md mx-auto mb-6">
-              Sincronización bidireccional: ve, crea, edita y elimina eventos desde DOM Platform.
+              Sincronización bidireccional: ve, crea, edita y elimina eventos desde Acua Conect.
             </p>
             <Boton icono={CalendarDays} cargando={conectando} onClick={conectarGoogle}>Conectar con Google</Boton>
 

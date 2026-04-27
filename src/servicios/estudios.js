@@ -135,27 +135,70 @@ export async function eliminarEstudio(id) {
 }
 
 // ===== IMPORTAR DESDE CSV/JSON (convertido desde .accdb) =====
+// Idempotente: usa clave determinista (anio + orden + slug título) como ID de documento.
+// Si un estudio ya existe con ese ID, se actualiza con merge (no se duplica).
+
+function slugificar(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+}
+
+export function calcularIdEstudio(mapped) {
+  // Clave estable: año-orden-slug. Permite re-importar sin duplicar.
+  const anio = mapped.anio || new Date().getFullYear()
+  const orden = String(mapped.orden ?? '0').padStart(4, '0')
+  const slug = slugificar(mapped.titulo) || 'sin-titulo'
+  return `access-${anio}-${orden}-${slug}`
+}
 
 export async function importarEstudiosDesdeJSON(obras) {
-  const batch = writeBatch(db)
   const CHUNK = 400
-  let count = 0
+  const resumen = { importadas: 0, actualizadas: 0, total: obras.length }
 
-  for (let i = 0; i < obras.length; i += CHUNK) {
-    const chunk = obras.slice(i, i + CHUNK)
+  // 1) Mapear y calcular IDs deterministas
+  const docs = obras.map(obra => {
+    const mapped = mapearCamposAccess(obra)
+    return { id: calcularIdEstudio(mapped), datos: mapped }
+  })
+
+  // 2) Detectar cuáles ya existen (en chunks de 30 por límite de Firestore 'in')
+  const existentes = new Set()
+  const ids = docs.map(d => d.id)
+  for (let i = 0; i < ids.length; i += 30) {
+    const chunk = ids.slice(i, i + 30)
+    try {
+      // Nota: documentId() no se puede usar directamente con 'in' en SDK web; iteramos por getDoc
+      // Para mantener simplicidad y rendimiento, hacemos getDoc por cada uno (suele ser <1k registros)
+      const checks = await Promise.all(chunk.map(id => getDoc(doc(db, COL, id))))
+      checks.forEach((snap, idx) => { if (snap.exists()) existentes.add(chunk[idx]) })
+    } catch (err) {
+      console.warn('Error verificando duplicados:', err)
+    }
+  }
+
+  // 3) Escribir en batches usando setDoc con merge (idempotente)
+  for (let i = 0; i < docs.length; i += CHUNK) {
+    const chunk = docs.slice(i, i + CHUNK)
     const b = writeBatch(db)
-    for (const obra of chunk) {
-      const ref = doc(collection(db, COL))
+    for (const { id, datos } of chunk) {
+      const ref = doc(db, COL, id)
+      const yaExiste = existentes.has(id)
       b.set(ref, {
-        ...mapearCamposAccess(obra),
-        fechaCreacion: serverTimestamp(),
+        ...datos,
+        ...(yaExiste ? {} : { fechaCreacion: serverTimestamp() }),
         fechaActualizacion: serverTimestamp(),
-      })
-      count++
+        origen: 'access',
+      }, { merge: true })
+      if (yaExiste) resumen.actualizadas++
+      else resumen.importadas++
     }
     await b.commit()
   }
-  return count
+  return resumen
 }
 
 // ===== MAPEO Access → Firestore =====
