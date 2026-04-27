@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "tramitacion-webdom"
+    "default": "acua-conect",
+    "legacy": "tramitacion-webdom"
   },
   "targets": {},
   "etags": {}
