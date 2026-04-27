@@ -110,8 +110,35 @@ export async function obtenerEstudios() {
 }
 
 export async function obtenerEstudio(id) {
+  // Soporte para IDs virtuales 'seed_N' del JSON local (mostrar la ficha sin tener
+  // que persistir todas las demos a Firestore). Se materializa cuando el usuario
+  // interactúa (vía materializarSeed).
+  if (typeof id === 'string' && id.startsWith('seed_')) {
+    const idx = parseInt(id.split('_')[1], 10)
+    const seed = (await import('../datos/obras_seed.json')).default
+    const obra = seed[idx]
+    if (!obra) return null
+    return { ...obra, id, origenFuente: 'accdb', _esSeed: true }
+  }
   const snap = await getDoc(doc(db, COL, id))
   return snap.exists() ? { id: snap.id, ...snap.data() } : null
+}
+
+// Promueve una obra "seed_X" a un documento real en Firestore con clave determinista.
+// Devuelve el nuevo id real (estable), o el mismo id si ya era real.
+export async function materializarSeed(seedObra) {
+  if (!seedObra || !seedObra._esSeed) return seedObra.id
+  // Limpiar campos virtuales antes de guardar
+  const { id: _omit, _esSeed: _omit2, ...datos } = seedObra
+  const mapped = mapearCamposAccess(datos)
+  const realId = calcularIdEstudio(mapped)
+  await setDoc(doc(db, COL, realId), {
+    ...mapped,
+    fechaCreacion: serverTimestamp(),
+    fechaActualizacion: serverTimestamp(),
+    origen: 'access',
+  }, { merge: true })
+  return realId
 }
 
 export async function crearEstudio(datos) {
@@ -124,10 +151,22 @@ export async function crearEstudio(datos) {
 }
 
 export async function actualizarEstudio(id, datos) {
+  // Si es seed virtual, materializar primero y luego actualizar
+  if (typeof id === 'string' && id.startsWith('seed_')) {
+    const obra = await obtenerEstudio(id)
+    if (!obra) throw new Error('Seed no encontrado')
+    const realId = await materializarSeed(obra)
+    await updateDoc(doc(db, COL, realId), {
+      ...datos,
+      fechaActualizacion: serverTimestamp(),
+    })
+    return realId
+  }
   await updateDoc(doc(db, COL, id), {
     ...datos,
     fechaActualizacion: serverTimestamp(),
   })
+  return id
 }
 
 export async function eliminarEstudio(id) {

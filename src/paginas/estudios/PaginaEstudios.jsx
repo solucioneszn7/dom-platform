@@ -486,10 +486,12 @@ export default function PaginaEstudios() {
     return unsub
   }, [usuario])
 
-  // Sin seed mock: si está vacío, mostramos EmptyState con CTA real (sincronizar PLACE/BOE,
-  // cargar Access o cargar demo via importarEstudiosDesdeJSON, que SÍ persiste en Firestore).
-  // Antes inyectábamos OBRAS_SEED con ids 'seed_X', pero al hacer click en una ficha
-  // obtenerEstudio('seed_X') devolvía null porque no existían en Firestore.
+  // Seed fallback si vacío (solo para visualización, NO persiste en Firestore hasta
+  // que el usuario interactúe — al darle ¡VAMOS! o "Crear proyecto en tablero" se materializa).
+  useEffect(() => {
+    if (!cargando && estudios.length === 0)
+      setEstudios(OBRAS_SEED.map((o, i) => ({ ...o, id: `seed_${i}`, origenFuente: 'accdb' })))
+  }, [cargando, estudios.length])
 
   // Filtrado y ordenación
   const setF = (k, v) => setFiltros(p => ({ ...p, [k]: v }))

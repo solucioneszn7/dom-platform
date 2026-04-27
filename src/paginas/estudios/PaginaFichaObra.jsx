@@ -9,7 +9,8 @@ import {
   Clock, Eye, Award, ChevronRight, Briefcase, Lock, ExternalLink, KanbanSquare,
 } from 'lucide-react'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
-import { obtenerEstudio, actualizarEstudio, eliminarEstudio } from '../../servicios/estudios'
+import { obtenerEstudio, actualizarEstudio, eliminarEstudio, materializarSeed } from '../../servicios/estudios'
+import { crearTareaTableroLocal } from '../../componentes/tablero-integration'
 import Tarjeta, { TarjetaCuerpo } from '../../componentes/ui/Tarjeta'
 import Boton from '../../componentes/ui/Boton'
 import Cargando from '../../componentes/ui/Cargando'
@@ -32,15 +33,53 @@ export default function PaginaFichaObra() {
 
   async function guardar() {
     setGuardando(true)
-    try { await actualizarEstudio(id, obra); toast.success('Guardado'); setEditando(false) }
-    catch (err) { toast.error('Error: ' + err.message) }
+    try {
+      // Quitamos campos virtuales antes de actualizar
+      const { _esSeed: _ignored, ...datos } = obra || {}
+      const realId = await actualizarEstudio(id, datos)
+      toast.success('Guardado')
+      setEditando(false)
+      // Si era seed, redirigir al ID real (la URL cambia a /estudios/{realId})
+      if (realId && realId !== id) navigate(`/estudios/${realId}`, { replace: true })
+    } catch (err) { toast.error('Error: ' + err.message) }
     finally { setGuardando(false) }
   }
 
   async function borrar() {
     if (!window.confirm('¿Eliminar este estudio?')) return
+    if (obra?._esSeed) { toast('Esta es una obra de demo. No hay nada que eliminar.', { icon: 'ℹ️' }); navigate('/estudios'); return }
     try { await eliminarEstudio(id); toast.success('Eliminado'); navigate('/estudios') }
     catch { toast.error('Error') }
+  }
+
+  // Click en "Crear proyecto en tablero" desde la ficha de licitación.
+  // Si la obra es seed, primero se materializa en Firestore (id real).
+  // Después se crea la tarea en localStorage (la lee PaginaTablero al montar y la persiste).
+  async function crearProyectoEnTablero() {
+    setGuardando(true)
+    try {
+      let obraReal = obra
+      let realId = id
+      if (obra?._esSeed) {
+        realId = await materializarSeed(obra)
+        const { _esSeed: _ignored, ...datos } = obra
+        // Marcar vamos=true en la obra recién materializada
+        await actualizarEstudio(realId, { ...datos, vamos: true })
+        obraReal = { ...obra, id: realId, vamos: true }
+      } else if (!obra.vamos) {
+        // Asegurar el flag vamos
+        await actualizarEstudio(realId, { vamos: true })
+        obraReal = { ...obra, vamos: true }
+      }
+      // Crear tarea en localStorage para que PaginaTablero la inyecte y persista
+      crearTareaTableroLocal(obraReal, datosUsuario)
+      toast.success('Proyecto añadido al tablero')
+      setTimeout(() => navigate(`/tablero?licitacion=${realId}`), 600)
+    } catch (err) {
+      toast.error('Error: ' + (err.message || 'no se pudo crear'))
+    } finally {
+      setGuardando(false)
+    }
   }
 
   function cambiarFase(fase) { setObra({ ...obra, faseActual: fase }) }
