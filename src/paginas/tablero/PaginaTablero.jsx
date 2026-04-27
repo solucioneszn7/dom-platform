@@ -67,20 +67,9 @@ export default function PaginaTablero() {
   }, [proyectoId, licitacionId])
 
   // ── Programador 2: detectar tareas pendientes desde botón "Participar" ──
-  // Usa inyectarTareasEnBoard desde tablero-integration para mantener lógica centralizada
-  useEffect(() => {
-    const pendientes = leerYLimpiarTareasPendientes()
-    if (pendientes.length === 0) return
-
-    setBoardData(prev => inyectarTareasEnBoard(prev, pendientes))
-
-    setNuevasTareas(pendientes.length)
-    toast.success(
-      `⚡ ${pendientes.length} oportunidad${pendientes.length > 1 ? 'es' : ''} añadida${pendientes.length > 1 ? 's' : ''} al tablero`
-    )
-  }, [])
-
+  // Persistir el board en Firestore (también usado por inyección y onSave)
   async function guardarBoard(board) {
+    if (!usuario) return
     await setDoc(doc(db, 'tableros', boardId), {
       board, boardId,
       proyectoId:   proyectoId || null,
@@ -89,6 +78,29 @@ export default function PaginaTablero() {
       actualizadoEn: new Date().toISOString(),
     }, { merge: true })
   }
+
+  // Usa inyectarTareasEnBoard desde tablero-integration para mantener lógica centralizada
+  useEffect(() => {
+    if (!usuario) return
+    const pendientes = leerYLimpiarTareasPendientes()
+    if (pendientes.length === 0) return
+
+    // Inyectar y PERSISTIR inmediatamente (antes solo quedaba en memoria hasta el primer onCellChange)
+    setBoardData(prev => {
+      const nuevo = inyectarTareasEnBoard(prev, pendientes)
+      // Guardar en Firestore para que persista entre sesiones
+      guardarBoard(nuevo).catch(err => {
+        console.error('Error al guardar tareas inyectadas:', err)
+        toast.error('No se pudieron guardar las tareas. Reintenta.')
+      })
+      return nuevo
+    })
+
+    setNuevasTareas(pendientes.length)
+    toast.success(
+      `⚡ ${pendientes.length} oportunidad${pendientes.length > 1 ? 'es' : ''} añadida${pendientes.length > 1 ? 's' : ''} al tablero`
+    )
+  }, [usuario, boardId])
 
   return (
     <div className="h-[calc(100vh-3rem)] -mt-6 -mx-4 sm:-mx-6 lg:-mx-10 overflow-hidden flex flex-col">

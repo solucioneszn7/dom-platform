@@ -47,26 +47,25 @@ const COLUMN_TYPE_OPTIONS = [
 const GROUP_COLORS = ['#0EA5E9','#10B981','#8B5CF6','#F59E0B','#EF4444','#06B6D4','#84CC16']
 
 // ─── ESTADO INICIAL ──────────────────────────────────────────────────────────
+// Tablero por defecto: VACÍO. Las "Tarea 1/2/3" mock anteriores aparecían a
+// usuarios nuevos sin razón. Ahora se llena al añadir proyectos manualmente o
+// al usar "Crear proyecto en tablero" desde una licitación.
 const INITIAL_BOARD = {
-  name: 'aqua-conect',
+  name: 'Mi tablero',
   columns: [
-    { id: 'name',    label: 'Tarea',        type: 'text',   width: 240, fixed: true },
+    { id: 'name',    label: 'Proyecto',     type: 'text',   width: 280, fixed: true },
     { id: 'owner',   label: 'Responsable',  type: 'owner',  width: 110 },
-    { id: 'status',  label: 'Estado',       type: 'status', width: 140 },
+    { id: 'status',  label: 'Estado',       type: 'status', width: 150 },
     { id: 'dueDate', label: 'Vencimiento',  type: 'date',   width: 130 },
-    { id: 'notes',   label: 'Notas',        type: 'text',   width: 160 },
+    { id: 'notes',   label: 'Notas',        type: 'text',   width: 200 },
   ],
   groups: [
     {
-      id: 'g1', name: 'Pendientes', color: '#0EA5E9', collapsed: false,
-      items: [
-        { id: 'i1', cells: { name: 'Tarea 1', owner: 'ZS', status: 'working',     dueDate: '2026-04-20', notes: 'Elementos de acción' } },
-        { id: 'i2', cells: { name: 'Tarea 2', owner: null, status: 'done',        dueDate: '2026-04-21', notes: 'Notas de reunión'    } },
-        { id: 'i3', cells: { name: 'Tarea 3', owner: null, status: 'stuck',       dueDate: '2026-04-22', notes: 'Otro'                } },
-      ],
+      id: 'g1', name: 'En seguimiento', color: '#0EA5E9', collapsed: false,
+      items: [],
     },
     {
-      id: 'g2', name: 'Completado', color: '#10B981', collapsed: false,
+      id: 'g2', name: 'Adjudicados', color: '#10B981', collapsed: false,
       items: [],
     },
   ],
