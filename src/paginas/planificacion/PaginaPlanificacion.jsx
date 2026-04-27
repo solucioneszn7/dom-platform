@@ -10,7 +10,7 @@ import {
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
 import { auth, proveedorGoogleDrive } from '../../servicios/firebase'
 import { useAuth } from '../../contextos/ContextoAutenticacion'
-import { escucharProyectos } from '../../servicios/proyectos'
+import { escucharProyectos, crearProyecto } from '../../servicios/proyectos'
 import { leerArchivoBC3, partidasAGantt } from '../../utils/parserBC3'
 import {
   guardarPresupuesto, obtenerPresupuesto, escucharPartidas,
@@ -34,6 +34,11 @@ export default function PaginaPlanificacion() {
   const [proyectoId, setProyectoId] = useState(null)
   const [proyectoInfo, setProyectoInfo] = useState(null)
   const [cargandoP, setCargandoP] = useState(true)
+  const [mostrarNuevo, setMostrarNuevo] = useState(false)
+  const [creando, setCreando] = useState(false)
+  const [nuevoNombre, setNuevoNombre] = useState('')
+  const [nuevaDir, setNuevaDir] = useState('')
+  const [nuevoPropietario, setNuevoPropietario] = useState('')
 
   useEffect(() => {
     if (!usuario) return
@@ -45,13 +50,56 @@ export default function PaginaPlanificacion() {
     obtenerPresupuesto(proyectoId).then(p => setPaso(p ? 'gestion' : 'cargar'))
   }, [proyectoId])
 
+  async function manejarCrearProyecto(e) {
+    e?.preventDefault?.()
+    if (!nuevoNombre.trim()) { toast.error('Indica el nombre del proyecto'); return }
+    setCreando(true)
+    try {
+      const nuevo = await crearProyecto({
+        nombre: nuevoNombre.trim(),
+        direccion: nuevaDir.trim() || '',
+        comuna: '',
+        moneda: 'EUR',
+        propietarioNombre: nuevoPropietario.trim() || '',
+        propietarioRut: '',
+        propietarioTelefono: '',
+        propietarioEmail: '',
+      }, usuario.uid)
+      toast.success(`${nuevo.numeroCaso} creado`)
+      setMostrarNuevo(false)
+      setNuevoNombre(''); setNuevaDir(''); setNuevoPropietario('')
+      // Auto-seleccionar y entrar en modo cargar BC3
+      setProyectoId(nuevo.id)
+      setProyectoInfo(nuevo)
+      setPaso('cargar')
+    } catch (err) {
+      toast.error('Error al crear: ' + (err.message || 'permiso denegado'))
+    } finally {
+      setCreando(false)
+    }
+  }
+
   if (paso === 'seleccionar') {
     return (
       <div className="space-y-6">
-        <div><h1 className="text-2xl font-bold text-gray-900 tracking-tight">Planificación de Obra</h1><p className="text-sm text-gray-400 mt-1">Selecciona un proyecto</p></div>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Planificación de Obra</h1>
+            <p className="text-sm text-gray-400 mt-1">Selecciona un proyecto o crea uno nuevo</p>
+          </div>
+          <Boton icono={Plus} onClick={() => setMostrarNuevo(true)}>Nuevo proyecto</Boton>
+        </div>
+
         {cargandoP ? <Cargando /> : (
-          <Tarjeta><div className="px-5 py-3 border-b border-gray-100"><h2 className="text-sm font-semibold text-gray-800">Proyectos</h2></div>
-            {proyectos.length === 0 ? <div className="py-12 text-center"><FolderKanban className="h-10 w-10 text-gray-200 mx-auto mb-3" /><p className="text-sm text-gray-400">Crea un proyecto primero.</p></div> : (
+          <Tarjeta>
+            <div className="px-5 py-3 border-b border-gray-100"><h2 className="text-sm font-semibold text-gray-800">Proyectos</h2></div>
+            {proyectos.length === 0 ? (
+              <div className="py-12 text-center">
+                <FolderKanban className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm text-gray-400 mb-4">Aún no tienes proyectos.</p>
+                <Boton icono={Plus} onClick={() => setMostrarNuevo(true)}>Crear primer proyecto</Boton>
+              </div>
+            ) : (
               <div className="divide-y divide-gray-50">{proyectos.map(p => (
                 <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-blue-50/30 cursor-pointer transition-colors" onClick={() => { setProyectoId(p.id); setProyectoInfo(p) }}>
                   <div className="min-w-0 flex-1">
@@ -60,7 +108,56 @@ export default function PaginaPlanificacion() {
                       {p.tienePresupuesto && <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-1"><CheckCircle className="h-3 w-3" />BC3</span>}
                     </div>
                     <h3 className="text-[13px] font-semibold text-gray-900">{p.nombre}</h3>
-                  </div><ChevronRight className="h-4 w-4 text-gray-300" /></div>))}</div>)}</Tarjeta>)}
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-300" />
+                </div>
+              ))}</div>
+            )}
+          </Tarjeta>
+        )}
+
+        {/* Modal nuevo proyecto */}
+        {mostrarNuevo && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => !creando && setMostrarNuevo(false)}>
+            <form onSubmit={manejarCrearProyecto} onClick={e => e.stopPropagation()}
+              className="bg-[#0f0c1c] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Nuevo proyecto</h3>
+                <button type="button" onClick={() => !creando && setMostrarNuevo(false)} className="text-white/40 hover:text-white"><X className="h-5 w-5" /></button>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-wide text-white/45 font-semibold mb-1">Nombre <span className="text-rose-400">*</span></label>
+                <input value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)} autoFocus
+                  placeholder="Ej: Edificio residencial Calle Mayor 12"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-[13px] text-white focus:border-violet-400 focus:outline-none" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-wide text-white/45 font-semibold mb-1">Dirección (opcional)</label>
+                <input value={nuevaDir} onChange={e => setNuevaDir(e.target.value)}
+                  placeholder="Calle, ciudad"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-[13px] text-white focus:border-violet-400 focus:outline-none" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-wide text-white/45 font-semibold mb-1">Cliente / Propietario (opcional)</label>
+                <input value={nuevoPropietario} onChange={e => setNuevoPropietario(e.target.value)}
+                  placeholder="Nombre del cliente"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-[13px] text-white focus:border-violet-400 focus:outline-none" />
+              </div>
+
+              <p className="text-[11px] text-white/45 leading-snug">
+                Tras crear el proyecto te llevaremos directo a <strong className="text-white/70">cargar el BC3</strong>. Podrás completar el resto de datos desde Configuración del proyecto.
+              </p>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Boton type="button" variante="secundario" onClick={() => setMostrarNuevo(false)} disabled={creando}>Cancelar</Boton>
+                <Boton type="submit" cargando={creando}>Crear y subir BC3</Boton>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     )
   }
